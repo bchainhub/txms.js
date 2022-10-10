@@ -27,13 +27,13 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - run: npm i
       - run: npm run standard
-  gitdiff:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12
-          registry-url: https://registry.npmjs.org/
-      - run: npm i
-      - run: npm run gitdiff
+  #gitdiff:
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - uses: actions/checkout@v2
+  #    - uses: actions/setup-node@v1
+  #      with:
+  #        node-version: 12
+  #        registry-url: https://registry.npmjs.org/
+  #    - run: npm i
+  #    - run: npm run gitdiff
