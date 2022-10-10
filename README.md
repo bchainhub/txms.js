@@ -95,7 +95,7 @@ yarn add txms.js
 ### Importing
 
 ```js
-import txms from '@cryptohub/txms.js';
+import txms from 'txms.js';
 let encoded = txms.encode(hex);
 let decoded = txms.decode(string);
 ```
@@ -103,7 +103,7 @@ let decoded = txms.decode(string);
 or
 
 ```js
-var txms = require('@cryptohub/txms.js');
+var txms = require('txms.js');
 var encoded = txms.encode(hex);
 var decoded = txms.decode(string);
 ```
@@ -175,7 +175,7 @@ We appreciate:
 
 ## Author
 
-CRYPTO ▪ HUB (@cryptohub-digital) // @raisty
+[CRYPTO ▪ HUB](https://www.github.com/cryptohub-digital) // [@raisty](https://www.github.com/raisty)
 
 ## Epigram
 

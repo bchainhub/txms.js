@@ -1,5 +1,5 @@
 {
-  "name": "@cryptohub/txms.js",
+  "name": "txms.js",
   "version": "0.1.1",
   "description": "Transaction messaging service protocol",
   "keywords": [
