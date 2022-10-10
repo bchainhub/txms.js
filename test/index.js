@@ -19,11 +19,11 @@ samples.valid.forEach(function (f) {
 })
 
 samples.invalid.forEach(function (f) {
-  tape.test('Encode — ' + f.description + ' — throws on: ', function (t) {
+  tape.test('Encode — ' + f.description + ' // hex: <' + f.hex.substring(0, 4) + f.hex.slice(-4) + '>', function (t) {
     t.plan(1)
     t.throws(function () {
       txms.encode(f.hex)
-    }, 'Not a hex format')
+    }, /Not a hex format/)
   })
 })
 

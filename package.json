@@ -28,7 +28,6 @@
   "scripts": {
     "build": "tsc -p ./tsconfig.json ; standard --fix",
     "gitdiff": "npm run build && git diff --exit-code",
-    "prepublish": "npm run gitdiff",
     "standard": "standard",
     "test": "npm run unit && npm run standard",
     "unit": "tape test/*.js"
