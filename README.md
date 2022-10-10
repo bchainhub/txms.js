@@ -15,29 +15,29 @@ Big-endian is an order in which the "big end" (most significant value in the seq
 Little-endian is an order in which the "little end" (least significant value in the sequence) is stored first.
 
 Byte Index | 0 | 1
----
+--- | --- | ---
 Big-Endian | 12 | 34
 Little-Endian | 34 | 12
 
 ## Practical use
 
-### Negative #1
+### Negative №1
 
-SMS can encode 160 7-bit characters into 140 bytes, but even that not all characters represent 1 character. Certain characters in GSM 03.38 require an escape character, such as: |, ^, {, }, €, [, ~, ] and \.
+SMS can encode 160 7-bit characters into 140 bytes, but even that not all characters represent 1 character. Certain characters in GSM 03.38 require an escape character, such as: `|, ^, {, }, €, [, ~, ]` and `\`.
 
 In Unicode SMS we are limited to 70 characters (or 67 in multipart sms).
 
-### Negative #2
+### Negative №2
 
 Most of providers are not accepting `invisible control characters and unused code points`; `any kind of invisible separator` and replacing they are them with character `�` `U+FFFD`.
 
 This will make transaction invalid.
 
-### Positive #1
+### Positive №1
 
 Modern providers and phones are supporting UCS-2 (is a now defunct character encoding), which is replaced with UTF-16 Big Endian (UTF-16BE).
 
-### Positive #2
+### Positive №2
 
 To avoid non-acceptance of certain characters, we are prefixing them with tilde `~` character ([007E](https://codepoints.net/U+007E)) following the 2+2 hex digits converted to Unicode characters.
 
