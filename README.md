@@ -1,10 +1,16 @@
 # TXMS.js
 
-This is Beta `β` version of the project. Please, report all the bugs in [issues](/issues).
+This is the Beta `β` version of the project. Please, report all the bugs in [issues](/issues).
+
+## List of providers
+
+You can choose most reliable provider for you and your region.
+
+[Open the TXMS Status page](https://txms.info)
 
 ## How does it work?
 
-This tool is using for conversion encoding UTF-16 Big Endian (UTF-16BE).
+This tool using for conversion encoding UTF-16 Big Endian (UTF-16BE).
 
 ### What is UTF-16 and (Big, Little) Endian?
 
@@ -25,39 +31,43 @@ Little-Endian | 34 | 12
 
 SMS can encode 160 7-bit characters into 140 bytes, but even that not all characters represent 1 character. Certain characters in GSM 03.38 require an escape character, such as: `|, ^, {, }, €, [, ~, ]` and `\`.
 
-In Unicode SMS we are limited to 70 characters (or 67 in multipart sms).
+In Unicode SMS we are limited to 70 characters (or 67 in multipart SMS).
 
 ### Negative №2
 
-Most of providers are not accepting `invisible control characters and unused code points`; `any kind of invisible separator` and replacing they are them with character `�` `U+FFFD`.
+Most of providers are not accepting `invisible control characters and unused code points`; `any kind of invisible separator` and they are replacing them with the character `�` `U+FFFD`.
 
-This will make transaction invalid.
+This will make the transaction invalid.
 
 ### Positive №1
 
-Modern providers and phones are supporting UCS-2 (is a now defunct character encoding), which is replaced with UTF-16 Big Endian (UTF-16BE).
+Modern providers and phones are supporting UCS-2 (a now-defunct character encoding), which is replaced with UTF-16 Big Endian (UTF-16BE).
 
 ### Positive №2
 
-To avoid non-acceptance of certain characters, we are prefixing them with tilde `~` character ([007E](https://codepoints.net/U+007E)) following the 2+2 hex digits converted to Unicode characters.
+To avoid non-acceptance of certain characters, we are prefixing them with a tilde `~` character ([007E](https://codepoints.net/U+007E)) following the 2+2 hex digits converted to Unicode characters.
 
-Both 2 hex digits will get `01` prefix.
+Both 2 hex digits will get the `01` prefix.
 
 For example:
-1. We are getting hex `09CA`, which is not valid Unicode character in [Bengali](https://codepoints.net/bengali).
+1. We are getting hex `09CA`, which is not a valid Unicode character in [Bengali](https://codepoints.net/bengali).
 1. We are splitting it into two parts 2+2.
 1. First half we are prefixing with `01` and we are getting `0109`, which will be converted to [ĉ](https://codepoints.net/U+0109).
 1. Second part we are prefixing with `01` and we are getting `01CA`, which will be converted to [Ǌ](https://codepoints.net/U+01CA).
 1. Converted characters we are prefixing with `~` tilde.
-1. As result we are getting `~ĉǊ` string.
+1. As a result we are getting `~ĉǊ` string.
+
+### Splitting Tx
+
+For dividing the transactions in the data feed you must use [Line feed](https://codepoints.net/U+000A) character. In script normally referred to as `\n` or `\r` depending on the OS.
 
 ### Result
 
-Based on this findings you should be able to send CORE transaction (or any other) encoded by UTF-16BE in the modern networks and phones with SMS.
+Based on these findings you should be able to send CORE transactions (or any other) encoded by UTF-16BE in modern networks and phones with SMS.
 
 Notes:
-- In some cases you need to swap buffer from Little Endian to Big endian.
-- Base62 is one of the best tool to convert UTF-16 characters into ASCII.
+- In some cases, you need to swap the buffer from Little Endian to Big endian.
+- Base62 is one of the best tools to convert UTF-16 characters into ASCII.
 - We are excluding characters from UTF-16 Basic Multilingual Plane:
    - tilde `~` character ([007E](https://codepoints.net/U+007E))
    - replacement `�` character ([FFFD](https://codepoints.net/U+FFFD))
@@ -66,15 +76,15 @@ Notes:
 
 ### Expectations
 
-Core Blockchain transaction should be packed into 2-3 SMS messages.
+Core Blockchain transactions should be packed into 2-3 SMS messages.
 
 #### Sending TXMS vs HEX
 
-TXMS is shorter but dependent on UTF-16, which makes it with plain HEX comparison slightly better in SMS usecase.
+TXMS is shorter but dependent on UTF-16, which makes it with plain HEX comparison slightly better in the SMS use case.
 
-But there is big difference about length of message.
+But there is a big difference in the length of the message.
 
-In native systems, which are supporting UTF-16 you will get always best or competitive results.
+In native systems, which are supporting UTF-16 you will get always the best or most competitive results.
 
 ## Installation
 
@@ -118,7 +128,7 @@ var decoded = txms.decode(string);
 
 - `hex` = hexadecimal representation of transaction without 0x prefix. (Even prefix is inserted, it is cutting it.)
 - `data` = UTF-16BE data
-- `network` (default: 1) = ID of Core Blockchain network or it's name (such as: mainnet, devin).
+- `network` (default: 1) = ID of Core Blockchain network or its name (such as: mainnet, devin).
 - `countriesList` (default: all) = ISO 3166 Alpha-2 country/ies code/s.
 
 ## Tests
@@ -135,32 +145,26 @@ We are using the Core Blockchain - Devin (testnet) wallets for tests.
 
 ## Additional services
 
-We are able send SMS back with status and we are streaming success/fail statuses into the database.
+We can send an SMS back with the status and we are streaming success/fail statuses into the database.
 
-If you need API endpoint or receiving SMS back to sender's number, feel free to contact us.
+If you need an API endpoint or receive an SMS back to the sender's number, feel free to contact us.
 
 ## SMS endpoint
 
-You can use our defined endpoints or create your own service.
+You can use our defined endpoints or create your service.
 
-To deliver the best results we are checking the online status of the service.
+To deliver the best results we are checking the online status of the service with the [uptime checker](https://github.com/gatestatus/txms).
 
 Follow the steps:
 - Test your service.
 - Please, return the [200 "OK"](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200) status code on the `yoururl.tld/ping` endpoint.
-- Raise the [Issue](/issues) with:
-   - Crypto, network operating;
-   - Service phone number;
-   - Region (ISO 3166 Alpha-2 country/ies code/s);
-   - URL;
-   - Declare, that you are not collecting the personal data;
-   - Free or paid(membership) service.
+- Raise the [Listing request](https://github.com/gatestatus/txms/issues/new/choose).
 
 ## Security
 
-This is not encrypting tool, but conversion. All people can read your signed transaction, but don't worry they can do it in any case on Blockchain.
+This is not encrypting tool, but a conversion. All people can read your signed transaction, but don't worry they can do it in any case on Blockchain.
 
-You should be basically safe. Don't stream your private key or any sensitive data that you want to protect.
+You should be safe. Don't stream your private key or any sensitive data that you want to protect.
 
 ## Contributions
 
