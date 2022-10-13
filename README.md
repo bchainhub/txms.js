@@ -1,5 +1,7 @@
 # TXMS.js
 
+<img src="assets/logo/txms.svg" width="128"/>
+
 This is the Beta `β` version of the project. Please, report all the bugs in [issues](/issues).
 
 ## List of providers
