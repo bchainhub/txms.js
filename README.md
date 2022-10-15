@@ -160,7 +160,7 @@ To deliver the best results we are checking the online status of the service wit
 Follow the steps:
 - Test your service.
 - Please, return the [200 "OK"](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200) status code on the `yoururl.tld/ping` endpoint.
-- Raise the [Listing request](https://github.com/gatestatus/txms/issues/new/choose).
+- Raise the [Listing request](https://github.com/gatestatus/txms/issues/new?template=list.yml).
 
 ## Security
 
