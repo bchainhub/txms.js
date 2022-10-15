@@ -2,7 +2,7 @@
 
 <img src="assets/logo/txms.svg" width="128"/>
 
-This is the Beta `β` version of the project. Please, report all the bugs in [issues](/issues).
+This is the Beta `β` version of the project. Please, report all the bugs in [issues](https://github.com/cryptohub-digital/txms.js/issues).
 
 ## List of providers
 
@@ -173,8 +173,8 @@ You should be safe. Don't stream your private key or any sensitive data that you
 Feel free to contribute in any way.
 
 We appreciate:
-- Fork [this repository](/fork)
-- Open [pull request](/pulls)
+- Fork [this repository](https://github.com/cryptohub-digital/txms.js/fork)
+- Open [pull request](https://github.com/cryptohub-digital/txms.js/pulls)
 - Create your own [SMS endpoint](#sms-endpoint)
 - Send us some Øres / ₡ores: [cb7147879011ea207df5b35a24ca6f0859dcfb145999](https://blockindex.net/address/cb7147879011ea207df5b35a24ca6f0859dcfb145999)
 - Star this repository
