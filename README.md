@@ -6,7 +6,7 @@ This is the Beta `β` version of the project. Please, report all the bugs in [is
 
 ## List of providers
 
-You can choose most reliable provider for you and your region.
+You can choose the most reliable provider for you and your region.
 
 [Open the TXMS Status page](https://txms.info)
 
@@ -20,7 +20,7 @@ UTF-16 is a character encoding capable of encoding all 1,112,064 valid code poin
 
 Big-endian is an order in which the "big end" (most significant value in the sequence) is stored first, at the lowest storage address.
 
-Little-endian is an order in which the "little end" (least significant value in the sequence) is stored first.
+Little-endian is an order, in which the "little end" (least significant value in the sequence) is stored first.
 
 Byte Index | 0 | 1
 --- | --- | ---
@@ -37,7 +37,7 @@ In Unicode SMS we are limited to 70 characters (or 67 in multipart SMS).
 
 ### Negative №2
 
-Most of providers are not accepting `invisible control characters and unused code points`; `any kind of invisible separator` and they are replacing them with the character `�` `U+FFFD`.
+Most providers are not accepting `invisible control characters and unused code points`; or `any kind of invisible separator` and they are replacing them with the character `�` `U+FFFD`.
 
 This will make the transaction invalid.
 
@@ -57,7 +57,7 @@ For example:
 1. First half we are prefixing with `01` and we are getting `0109`, which will be converted to [ĉ](https://codepoints.net/U+0109).
 1. Second part we are prefixing with `01` and we are getting `01CA`, which will be converted to [Ǌ](https://codepoints.net/U+01CA).
 1. Converted characters we are prefixing with `~` tilde.
-1. As a result we are getting `~ĉǊ` string.
+1. As a result we are getting the `~ĉǊ` string.
 
 ### Splitting Tx
 
@@ -72,7 +72,7 @@ Notes:
 - Base62 is one of the best tools to convert UTF-16 characters into ASCII.
 - We are excluding characters from UTF-16 Basic Multilingual Plane:
    - tilde `~` character ([007E](https://codepoints.net/U+007E))
-   - replacement `�` character ([FFFD](https://codepoints.net/U+FFFD))
+   - replacement ` ` character ([FFFD](https://codepoints.net/U+FFFD))
    - Control, Format, Unassigned, Private use, Surrogate characters
    - Space characters - Line separator, Paragraph separator, Space separator
 

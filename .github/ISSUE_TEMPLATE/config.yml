@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Readme
+    url: https://github.com/cryptohub-digital/txms.js#readme
+    about: Read more about the code
+  - name: Status page
+    url: https://txms.info/
+    about: Get information about running services
