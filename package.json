@@ -1,6 +1,6 @@
 {
   "name": "txms.js",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "Transaction messaging service protocol",
   "keywords": [
     "txms",
@@ -25,6 +25,9 @@
   ],
   "main": "src/index.js",
   "types": "src/index.d.ts",
+  "bin": {
+    "txms": "bin/txms"
+  },
   "scripts": {
     "build": "tsc -p ./tsconfig.json ; standard --fix",
     "gitdiff": "npm run build && git diff --exit-code",
@@ -36,7 +39,10 @@
     "node": ">= 8"
   },
   "author": "CRYPTO ▪ HUB",
-  "license": "CORE",
+  "license": {
+    "type": "CORE",
+    "url": "https://github.com/cryptohub-digital/blob/master/LICENSE"
+  },
   "devDependencies": {
     "@types/node": "^18.7.18",
     "standard": "^17.0.0",

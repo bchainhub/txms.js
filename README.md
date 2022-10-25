@@ -2,8 +2,6 @@
 
 <img src="assets/logo/txms.svg" width="128"/>
 
-This is the Beta `β` version of the project. Please, report all the bugs in [issues](https://github.com/cryptohub-digital/txms.js/issues).
-
 ## List of providers
 
 You can choose the most reliable provider for you and your region.
@@ -132,6 +130,30 @@ var decoded = txms.decode(string);
 - `data` = UTF-16BE data
 - `network` (default: 1) = ID of Core Blockchain network or its name (such as: mainnet, devin).
 - `countriesList` (default: all) = ISO 3166 Alpha-2 country/ies code/s.
+
+## CLI
+
+### Installation
+
+```bash
+npm i -g txms.js
+```
+
+### Getting started
+
+```bash
+$ txms {type} {value} {location}
+```
+
+- type: `encode` (`e`), `decode` (`d`), `getendpoint` (`g`)
+- value: message; network for getendpoint
+- location: ISO 3166 Alpha-2 country/ies code/s for getendpoint
+
+### Piping
+
+```bash
+$ echo {value} | txms {type} {location}
+```
 
 ## Tests
 

@@ -1,0 +1,61 @@
+#!/usr/bin/env node
+
+const txms = require('../')
+
+if (process.stdin) {
+  process.stdin.setEncoding('utf8')
+  process.stdin.resume()
+  let content = ''
+  process.stdin.on('data', (buf) => {
+    content += buf.toString()
+  })
+  setTimeout(() => {
+    content = content.trim()
+
+    let value = content
+    let typ = process.argv[2]
+    let loc = process.argv[3]
+
+    if (!content) {
+      value = process.argv[2]
+      typ = process.argv[3]
+      loc = process.argv[4]
+    }
+
+    run(typ, value, loc)
+  }, 10)
+} else {
+  const typ = process.argv[2]
+  const value = process.argv[3]
+  const loc = process.argv[4]
+
+  run(typ, value, loc)
+}
+
+function run (typ, value, loc) {
+  if (!value) {
+    process.stderr.write('value is required')
+    process.exit(1)
+  }
+
+  try {
+    if (typ === 'encode' || typ === 'e') {
+      const encoded = txms.encode(value)
+      process.stdout.write(`${encoded}`)
+      process.exit(0)
+    }
+    if (typ === 'decode' || typ === 'd') {
+      const decoded = txms.decode(value)
+      process.stdout.write(`${decoded}`)
+      process.exit(0)
+    }
+    if (typ === 'getendpoint' || typ === 'g') {
+      const endpoint = txms.getEndpoint(value, loc)
+      process.stdout.write(`${endpoint}`)
+      process.exit(0)
+    }
+  } catch (err) {
+    process.stderr.write(err.message)
+    process.exit(1)
+  }
+}
