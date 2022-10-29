@@ -41,7 +41,7 @@
   "author": "CRYPTO ▪ HUB",
   "license": {
     "type": "CORE",
-    "url": "https://github.com/cryptohub-digital/blob/master/LICENSE"
+    "url": "https://github.com/cryptohub-digital/core-license/blob/master/LICENSE"
   },
   "devDependencies": {
     "@types/node": "^18.7.18",
