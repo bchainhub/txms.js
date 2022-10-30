@@ -203,7 +203,7 @@ We appreciate:
 
 ## Author
 
-[CRYPTO ▪ HUB](https://www.github.com/cryptohub-digital) // [@raisty](https://www.github.com/raisty)
+[CRYPTO ▪ HUB](https://www.github.com/cryptohub-digital) // [@rastislavcore](https://www.github.com/rastislavcore)
 
 ## Epigram
 
