@@ -50,6 +50,8 @@ const txms : txms.Transport = {
     let countries: Record<string, CountryRecord> = {
       // Mainnet network
       "1": {
+        "eu": ["+447361590202"],
+        "gb": ["+447361590202"],
         "ag": [""],
         "ai": [""],
         "as": [""],
@@ -79,6 +81,8 @@ const txms : txms.Transport = {
       },
       // Devin network
       "3": {
+        "eu": ["+447897032005"],
+        "gb": ["+447897032005"],
         "ag": [""],
         "ai": [""],
         "as": [""],
