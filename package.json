@@ -39,10 +39,7 @@
     "node": ">= 8"
   },
   "author": "CRYPTO ▪ HUB",
-  "license": {
-    "type": "CORE",
-    "url": "https://github.com/cryptohub-digital/core-license/blob/master/LICENSE"
-  },
+  "license": "CORE",
   "devDependencies": {
     "@types/node": "^18.7.18",
     "standard": "^17.0.0",
