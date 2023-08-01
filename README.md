@@ -2,73 +2,71 @@
 
 <img src="https://corecdn.info/badge/svg/128/txms.svg" width="128"/>
 
-## List of providers
+## List of Providers
 
-You can choose the most reliable provider for you and your region.
+Choose the provider most reliable for your needs and region.
 
 [Open the TXMS Status page](https://txms.info)
 
-## How does it work?
+## How Does It Work?
 
-This tool using for conversion encoding UTF-16 Big Endian (UTF-16BE).
+This tool is used for converting HEX encoding to UTF-16 Big Endian (UTF-16BE).
 
-### What is UTF-16 and (Big, Little) Endian?
+### What Are UTF-16 and (Big, Little) Endian?
 
-UTF-16 is a character encoding capable of encoding all 1,112,064 valid code points of Unicode.
+UTF-16 is a character encoding that can encode all 1,112,064 valid Unicode code points.
 
-Big-endian is an order in which the "big end" (most significant value in the sequence) is stored first, at the lowest storage address.
+Big-endian is an order in which the "big end" (most significant value in the sequence) is stored first at the lowest storage address.
 
-Little-endian is an order, in which the "little end" (least significant value in the sequence) is stored first.
+In contrast, little-endian is an order where the "little end" (least significant value in the sequence) is stored first.
 
 Byte Index | 0 | 1
 --- | --- | ---
 Big-Endian | 12 | 34
 Little-Endian | 34 | 12
 
-## Practical use
+## Practical Use
 
-### Negative №1
+### Disadvantage 1
 
-SMS can encode 160 7-bit characters into 140 bytes, but even that not all characters represent 1 character. Certain characters in GSM 03.38 require an escape character, such as: `|, ^, {, }, €, [, ~, ]` and `\`.
+An SMS can encode 160 7-bit characters into 140 bytes. However, not all characters represent 1 character. Certain characters in GSM 03.38 require an escape character, such as: `|, ^, {, }, €, [, ~, ]` and `\`.
 
-In Unicode SMS we are limited to 70 characters (or 67 in multipart SMS).
+For Unicode SMS, we are limited to 70 characters (or 67 in multipart SMS).
 
-### Negative №2
+### Disadvantage 2
 
-Most providers are not accepting `invisible control characters and unused code points`; or `any kind of invisible separator` and they are replacing them with the character `�` `U+FFFD`.
+Most providers do not accept `invisible control characters and unused code points` or `any type of invisible separator`. They replace these with the character `�` `U+FFFD`, which makes the transaction invalid.
 
-This will make the transaction invalid.
+### Advantage 1
 
-### Positive №1
+Modern providers and phones support UCS-2 (a now-defunct character encoding), which has been replaced with UTF-16 Big Endian (UTF-16BE).
 
-Modern providers and phones are supporting UCS-2 (a now-defunct character encoding), which is replaced with UTF-16 Big Endian (UTF-16BE).
+### Advantage 2
 
-### Positive №2
+To prevent the rejection of certain characters, we prefix them with a tilde `~` character ([007E](https://codepoints.net/U+007E)), followed by the 2+2 hex digits converted to Unicode characters.
 
-To avoid non-acceptance of certain characters, we are prefixing them with a tilde `~` character ([007E](https://codepoints.net/U+007E)) following the 2+2 hex digits converted to Unicode characters.
-
-Both 2 hex digits will get the `01` prefix.
+Both 2 hex digits receive the `01` prefix.
 
 For example:
-1. We are getting hex `09CA`, which is not a valid Unicode character in [Bengali](https://codepoints.net/bengali).
-1. We are splitting it into two parts 2+2.
-1. First half we are prefixing with `01` and we are getting `0109`, which will be converted to [ĉ](https://codepoints.net/U+0109).
-1. Second part we are prefixing with `01` and we are getting `01CA`, which will be converted to [Ǌ](https://codepoints.net/U+01CA).
-1. Converted characters we are prefixing with `~` tilde.
-1. As a result we are getting the `~ĉǊ` string.
+1. We receive hex `09CA`, which is not a valid Unicode character in [Bengali](https://codepoints.net/bengali).
+1. We split it into two 2+2 parts.
+1. We prefix the first half with `01`, resulting in `0109`, which is converted to [ĉ](https://codepoints.net/U+0109).
+1. We prefix the second part with `01`, resulting in `01CA`, which is converted to [Ǌ](https://codepoints.net/U+01CA).
+1. The converted characters are prefixed with a `~` tilde.
+1. The result is the `~ĉǊ` string.
 
-### Splitting Tx
+### Transaction Splitting
 
-For dividing the transactions in the data feed you must use [Line feed](https://codepoints.net/U+000A) character. In script normally referred to as `\n` or `\r` depending on the OS.
+To divide transactions in the data feed, use the [Line feed](https://codepoints.net/U+000A) character. In scripts, this is usually referred to as `\n` or `\r`, depending on the OS.
 
-### Result
+### Outcome
 
-Based on these findings you should be able to send CORE transactions (or any other) encoded by UTF-16BE in modern networks and phones with SMS.
+Based on these findings, you should be capable of sending CORE transactions (or any others) encoded by UTF-16BE on modern networks and phones through SMS.
 
 Notes:
-- In some cases, you need to swap the buffer from Little Endian to Big endian.
-- Base62 is one of the best tools to convert UTF-16 characters into ASCII.
-- We are excluding characters from UTF-16 Basic Multilingual Plane:
+- In some instances, you may need to swap the buffer from Little Endian to Big Endian.
+- Base62 is a great tool for converting UTF-16 characters into ASCII.
+- We exclude characters from the UTF-16 Basic Multilingual Plane:
    - tilde `~` character ([007E](https://codepoints.net/U+007E))
    - replacement ` ` character ([FFFD](https://codepoints.net/U+FFFD))
    - Control, Format, Unassigned, Private use, Surrogate characters
@@ -80,11 +78,11 @@ Core Blockchain transactions should be packed into 2-3 SMS messages.
 
 #### Sending TXMS vs HEX
 
-TXMS is shorter but dependent on UTF-16, which makes it with plain HEX comparison slightly better in the SMS use case.
+TXMS, while dependent on UTF-16, is shorter, making it slightly more efficient than plain HEX in the context of SMS.
 
-But there is a big difference in the length of the message.
+However, there is a significant difference in the length of the messages.
 
-In native systems, which are supporting UTF-16 you will get always the best or most competitive results.
+In native systems that support UTF-16, you will always achieve the best or most competitive results.
 
 ## Installation
 
@@ -100,7 +98,7 @@ npm i txms.js
 yarn add txms.js
 ```
 
-## Use
+## Usage
 
 ### Importing
 
@@ -126,7 +124,7 @@ var decoded = txms.decode(string);
 
 ### Parameters
 
-- `hex` = hexadecimal representation of transaction without 0x prefix. (Even prefix is inserted, it is cutting it.)
+- `hex` = hexadecimal representation of transaction without 0x prefix. (If a prefix is present, it is removed.)
 - `data` = UTF-16BE data
 - `network` (default: 1) = ID of Core Blockchain network or its name (such as: mainnet, devin).
 - `countriesList` (default: all) = ISO 3166 Alpha-2 country/ies code/s.
@@ -159,53 +157,53 @@ $ echo {value} | txms {type} {location}
 
 Unit tests are included and can be executed with the command `yarn test` or `npm run test`.
 
-GitHub is automatically testing the commits into the source code.
+GitHub automatically tests the commits into the source code.
 
-Feel free to contribute and extend our test cases.
+Contributions and extensions to our test cases are welcome.
 
 ### Test wallets
 
-We are using the Core Blockchain - Devin (testnet) wallets for tests.
+We use the Core Blockchain - Devin (testnet) wallets for tests.
 
-## Additional services
+## Additional Services
 
-We can send an SMS back with the status and we are streaming success/fail statuses into the database.
+We can send an SMS back with the status and stream success/failure statuses into the database.
 
-If you need an API endpoint or receive an SMS back to the sender's number, feel free to contact us.
+If you need an API endpoint or want to receive an SMS back to the sender's number, please contact us.
 
-## SMS endpoint
+## SMS Endpoint
 
-You can use our defined endpoints or create your service.
+You can use our predefined endpoints or create your own service.
 
-To deliver the best results we are checking the online status of the service with the [uptime checker](https://github.com/gatestatus/txms).
+To provide the best results, we check the online status of the service with the [uptime checker](https://github.com/gatestatus/txms).
 
-Follow the steps:
+Follow these steps:
 - Test your service.
-- Please, return the [200 "OK"](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200) status code on the `yoururl.tld/ping` endpoint.
-- Raise the [Listing request](https://github.com/gatestatus/txms/issues/new?template=list.yml).
+- Return the [200 "OK"](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200) status code at the `yoururl.tld/ping` endpoint.
+- Submit a [Listing request](https://github.com/gatestatus/txms/issues/new?template=list.yml).
 
 ## Security
 
-This is not encrypting tool, but a conversion. All people can read your signed transaction, but don't worry they can do it in any case on Blockchain.
+This tool doesn't encrypt, it converts. Therefore, anyone can read your signed transaction, but don't worry as they could do this on the Blockchain anyway.
 
-You should be safe. Don't stream your private key or any sensitive data that you want to protect.
+Stay safe. Do not broadcast your private key or any sensitive data you wish to safeguard.
 
 ## Contributions
 
-Feel free to contribute in any way.
+You're welcome to contribute in any capacity.
 
-We appreciate:
-- Fork [this repository](https://github.com/cryptohub-digital/txms.js/fork)
-- Open [pull request](https://github.com/cryptohub-digital/txms.js/pulls)
-- Create your own [SMS endpoint](#sms-endpoint)
-- Send us some Øres / ₡ores: [cb7147879011ea207df5b35a24ca6f0859dcfb145999](https://blockindex.net/address/cb7147879011ea207df5b35a24ca6f0859dcfb145999)
-- Star this repository
+We welcome:
+- Forking [this repository](https://github.com/cryptohub-digital/txms.js/fork)
+- Opening a [pull request](https://github.com/cryptohub-digital/txms.js/pulls)
+- Creating your own [SMS endpoint](#sms-endpoint)
+- Sending us some Øres / ₡ores: [cb7147879011ea207df5b35a24ca6f0859dcfb145999](https://blockindex.net/address/cb7147879011ea207df5b35a24ca6f0859dcfb145999)
+- Starring this repository
 
 ## Author
 
-[CRYPTO ▪ HUB](https://www.github.com/cryptohub-digital) // [@rastislavcore](https://www.github.com/rastislavcore)
+[CRYPTO ▪ HUB](https://www.github.com/cryptohub-digital)
 
-## Epigram
+## Motto
 
 > 「Cryptoni Confidimus」
 
