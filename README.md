@@ -1,6 +1,6 @@
 # TXMS.js
 
-<img src="assets/logo/txms.svg" width="128"/>
+<img src="https://corecdn.info/badge/svg/128/txms.svg" width="128"/>
 
 ## List of providers
 
