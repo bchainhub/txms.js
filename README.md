@@ -1,16 +1,16 @@
 # TXMS.js
 
-<img src="https://corecdn.info/badge/svg/128/txms.svg" width="128"/>
+<img src="https://corecdn.info/badge/svg/128/txms.svg" width="128" />
 
 ## List of Providers
 
-Choose the provider most reliable for your needs and region.
+Choose the provider that is most reliable for your needs and region.
 
 [Open the TXMS Status page](https://txms.info)
 
 ## How Does It Work?
 
-This tool is used for converting HEX encoding to UTF-16 Big Endian (UTF-16BE).
+This tool is used for converting HEX encoding to UTF-16 Big Endian (UTF-16BE) and vice versa.
 
 ### What Are UTF-16 and (Big, Little) Endian?
 
@@ -20,22 +20,22 @@ Big-endian is an order in which the "big end" (most significant value in the seq
 
 In contrast, little-endian is an order where the "little end" (least significant value in the sequence) is stored first.
 
-Byte Index | 0 | 1
---- | --- | ---
-Big-Endian | 12 | 34
-Little-Endian | 34 | 12
+| Byte Index  | 0  | 1  |
+|-------------|----|----|
+| Big-Endian  | 12 | 34 |
+| Little-Endian | 34 | 12 |
 
 ## Practical Use
 
 ### Disadvantage 1
 
-An SMS can encode 160 7-bit characters into 140 bytes. However, not all characters represent 1 character. Certain characters in GSM 03.38 require an escape character, such as: `|, ^, {, }, €, [, ~, ]` and `\`.
+An SMS can encode 160 7-bit characters into 140 bytes. However, not all characters represent a single character. Certain characters in GSM 03.38 require an escape character, such as: `|, ^, {, }, €, [, ~, ]` and `\`.
 
 For Unicode SMS, we are limited to 70 characters (or 67 in multipart SMS).
 
 ### Disadvantage 2
 
-Most providers do not accept `invisible control characters and unused code points` or `any type of invisible separator`. They replace these with the character `�` `U+FFFD`, which makes the transaction invalid.
+Most providers do not accept invisible control characters, unused code points, or any type of invisible separator. They replace these with the character `�` (`U+FFFD`), which makes the transaction invalid.
 
 ### Advantage 1
 
@@ -48,12 +48,13 @@ To prevent the rejection of certain characters, we prefix them with a tilde `~` 
 Both 2 hex digits receive the `01` prefix.
 
 For example:
-1. We receive hex `09CA`, which is not a valid Unicode character in [Bengali](https://codepoints.net/bengali).
-1. We split it into two 2+2 parts.
-1. We prefix the first half with `01`, resulting in `0109`, which is converted to [ĉ](https://codepoints.net/U+0109).
-1. We prefix the second part with `01`, resulting in `01CA`, which is converted to [Ǌ](https://codepoints.net/U+01CA).
-1. The converted characters are prefixed with a `~` tilde.
-1. The result is the `~ĉǊ` string.
+
+1. We receive the hex `09CA`, which is not a valid Unicode character in [Bengali](https://codepoints.net/bengali).
+2. We split it into two 2+2 parts.
+3. We prefix the first half with `01`, resulting in `0109`, which is converted to [ĉ](https://codepoints.net/U+0109).
+4. We prefix the second part with `01`, resulting in `01CA`, which is converted to [Ǌ](https://codepoints.net/U+01CA).
+5. The converted characters are prefixed with a `~` tilde.
+6. The result is the `~ĉǊ` string.
 
 ### Transaction Splitting
 
@@ -61,16 +62,17 @@ To divide transactions in the data feed, use the [Line feed](https://codepoints.
 
 ### Outcome
 
-Based on these findings, you should be capable of sending CORE transactions (or any others) encoded by UTF-16BE on modern networks and phones through SMS.
+Based on these findings, you should be capable of sending CORE transactions (or any others) encoded in UTF-16BE on modern networks and phones through SMS.
 
 Notes:
+
 - In some instances, you may need to swap the buffer from Little Endian to Big Endian.
 - Base62 is a great tool for converting UTF-16 characters into ASCII.
-- We exclude characters from the UTF-16 Basic Multilingual Plane:
-   - tilde `~` character ([007E](https://codepoints.net/U+007E))
-   - replacement ` ` character ([FFFD](https://codepoints.net/U+FFFD))
-   - Control, Format, Unassigned, Private use, Surrogate characters
-   - Space characters - Line separator, Paragraph separator, Space separator
+- We exclude certain characters from the UTF-16 Basic Multilingual Plane:
+  - tilde `~` character ([007E](https://codepoints.net/U+007E))
+  - replacement character `�` ([FFFD](https://codepoints.net/U+FFFD))
+  - Control, Format, Unassigned, Private use, Surrogate characters
+  - Space characters - Line separator, Paragraph separator, Space separator
 
 ### Expectations
 
@@ -83,6 +85,15 @@ TXMS, while dependent on UTF-16, is shorter, making it slightly more efficient t
 However, there is a significant difference in the length of the messages.
 
 In native systems that support UTF-16, you will always achieve the best or most competitive results.
+
+## SMS Functionality
+
+The `sms` function has been extended to support multiple numbers. You can now provide an array of numbers, and each will be validated individually. Valid numbers will be concatenated with a comma `,` to form the SMS endpoint.
+
+- If the number is `true`, the default number for the mainnet (1) will be used.
+- If the number is a string, it must be formatted as `+` followed by digits.
+- If the number is an array, each element will be checked for validity.
+- An optional `encodeMessage` parameter (default: `true`) allows you to encode the message using `encodeURIComponent` and an internal `encode` function. If set to `false`, the message will only be encoded using `encodeURIComponent`.
 
 ## Installation
 
@@ -120,18 +131,22 @@ var decoded = txms.decode(string);
 
 - `encode(hex: string): string` — Convert hex transaction into UTF-16BE.
 - `decode(data: string): string` — Convert UTF-16BE into hex transaction.
-- `getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> }` — Get object of SMS endpoints (phone numbers) per country.
+- `getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> }` — Get an object of SMS endpoints (phone numbers) per country.
+- `sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean): string` — Create an SMS URI based on the provided parameters.
 
 ### Parameters
 
 - `hex` = hexadecimal representation of transaction without 0x prefix. (If a prefix is present, it is removed.)
-- `data` = UTF-16BE data
+- `data` = UTF-16BE data.
 - `network` (default: 1) = ID of Core Blockchain network or its name (such as: mainnet, devin).
 - `countriesList` (default: all) = ISO 3166 Alpha-2 country/ies code/s.
+- `number` = boolean, string, number, or array of these, representing the phone number(s) for the SMS.
+- `message` = the SMS message content.
+- `encodeMessage` (default: `true`) = whether to encode the message before using `encodeURIComponent`.
 
 ## CLI
 
-### Installation
+### CLI Installation
 
 ```bash
 npm i -g txms.js
@@ -140,7 +155,7 @@ npm i -g txms.js
 ### Getting started
 
 ```bash
-$ txms {type} {value} {location}
+txms {type} {value} {location}
 ```
 
 - type: `encode` (`e`), `decode` (`d`), `getendpoint` (`g`)
@@ -150,7 +165,7 @@ $ txms {type} {value} {location}
 ### Piping
 
 ```bash
-$ echo {value} | txms {type} {location}
+echo {value} | txms {type} {location}
 ```
 
 ## Tests
@@ -178,6 +193,7 @@ You can use our predefined endpoints or create your own service.
 To provide the best results, we check the online status of the service with the [uptime checker](https://github.com/gatestatus/txms).
 
 Follow these steps:
+
 - Test your service.
 - Return the [200 "OK"](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200) status code at the `yoururl.tld/ping` endpoint.
 - Submit a [Listing request](https://github.com/gatestatus/txms/issues/new?template=list.yml).
@@ -188,24 +204,33 @@ This tool doesn't encrypt, it converts. Therefore, anyone can read your signed t
 
 Stay safe. Do not broadcast your private key or any sensitive data you wish to safeguard.
 
+## Pricing considerations
+
+The service is free to use, but you may incur charges from your mobile provider.
+
+Prices may vary depending on the provider and the country.
+
+In Slovakia, for example, the price is 0.06 EUR (worldwide) per SMS. This can be 0.18 - 0.24 EUR for a 3,4-part SMS which corresponds to one transaction.
+
+### MMS
+
+If you need to send a larger transaction, you can use MMS (Multimedia Messaging Service). This service is not supported by this tool.
+
+MMS is better suited for larger files and Blockchain transactions.
+
+The MMS text limit is 5000 characters. MMS object has a limit of 2048 KB.
+
 ## Contributions
 
 You're welcome to contribute in any capacity.
 
 We welcome:
-- Forking [this repository](https://github.com/cryptohub-digital/txms.js/fork)
-- Opening a [pull request](https://github.com/cryptohub-digital/txms.js/pulls)
+
+- Forking [this repository](https://github.com/bchainhub/txms.js/fork)
+- Opening a [pull request](https://github.com/bchainhub/txms.js/pulls)
 - Creating your own [SMS endpoint](#sms-endpoint)
 - Sending us some Øres / ₡ores: [cb7147879011ea207df5b35a24ca6f0859dcfb145999](https://blockindex.net/address/cb7147879011ea207df5b35a24ca6f0859dcfb145999)
 - Starring this repository
-
-## Author
-
-[CRYPTO ▪ HUB](https://www.github.com/cryptohub-digital)
-
-## Motto
-
-> 「Cryptoni Confidimus」
 
 ## License
 

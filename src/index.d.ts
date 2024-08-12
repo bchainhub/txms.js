@@ -7,8 +7,9 @@ declare namespace txms {
         getEndpoint(network?: number | string, countriesList?: string | Array<string>): {
             [key: string]: Array<string>;
         };
+        sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean): string;
     }
-    interface Error {
+    interface Error extends globalThis.Error {
         code?: number;
     }
 }
