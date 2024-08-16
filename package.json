@@ -1,30 +1,10 @@
 {
 	"name": "txms.js",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "Transaction messaging service protocol",
-	"keywords": [
-		"txms",
-		"transaction",
-		"messaging",
-		"service",
-		"protocol",
-		"crypto",
-		"crytography",
-		"decode",
-		"decoding",
-		"encode",
-		"encoding"
-	],
-	"repository": "https://github.com/bchainhub/txms.js",
-	"homepage": "https://github.com/bchainhub/txms.js#readme",
-	"bugs": {
-		"url": "https://github.com/bchainhub/txms.js/issues"
-	},
-	"files": [
-		"src"
-	],
-	"main": "src/index.js",
-	"types": "src/index.d.ts",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"type": "module",
 	"bin": {
 		"txms": "bin/txms"
 	},
@@ -36,12 +16,37 @@
 		"unit": "tape test/*.js"
 	},
 	"engines": {
-		"node": ">= 10"
+		"node": ">= 14"
 	},
+	"keywords": [
+		"txms",
+		"transaction",
+		"messaging",
+		"service",
+		"protocol",
+		"crypto",
+		"crytography",
+		"blockchain",
+		"decode",
+		"decoding",
+		"encode",
+		"encoding"
+	],
+	"repository": "https://github.com/bchainhub/txms.js",
+	"homepage": "https://txms.info",
+	"bugs": {
+		"url": "https://github.com/bchainhub/txms.js/issues"
+	},
+	"files": [
+		"dist",
+		"bin",
+		"LICENSE",
+		"README.md"
+	],
 	"author": "@bchainhub",
 	"license": "CORE",
 	"devDependencies": {
-		"@types/node": "^22.2.0",
+		"@types/node": "^22.3.0",
 		"standard": "^17.1.0",
 		"tape": "^5.8.1",
 		"typescript": "^5.5.4"

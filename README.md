@@ -1,12 +1,17 @@
-# TXMS.js
+# TxMS.js
 
-<img src="https://corecdn.info/badge/svg/128/txms.svg" width="128" />
+![TxMS logo](https://corecdn.info/badge/svg/128/txms.svg)
+> Official TxMS logo
+
+TxMS is a tool designed for converting binary data into a sequence of printable characters, following a process known as [Binary-to-text encoding](https://en.wikipedia.org/wiki/Binary-to-text_encoding). This tool also enables the reverse operation, where text containing encoded transactions is decoded back into its original hexadecimal format. For SMS processing, TxMS utilizes the UTF-16 Big Endian (UTF-16BE) encoding standard to ensure proper handling and interpretation of the binary data.
 
 ## List of Providers
 
 Choose the provider that is most reliable for your needs and region.
 
-[Open the TXMS Status page](https://txms.info)
+[Open the TxMS Status page](https://txms.info)
+
+You can find the open-source server processor at [DataLayerHost/txms-server](https://github.com/DataLayerHost/txms-server).
 
 ## How Does It Work?
 
@@ -78,9 +83,9 @@ Notes:
 
 Core Blockchain transactions should be packed into 2-3 SMS messages.
 
-#### Sending TXMS vs HEX
+#### Sending TxMS vs HEX
 
-TXMS, while dependent on UTF-16, is shorter, making it slightly more efficient than plain HEX in the context of SMS.
+TxMS, while dependent on UTF-16, is shorter, making it slightly more efficient than plain HEX in the context of SMS.
 
 However, there is a significant difference in the length of the messages.
 
@@ -132,7 +137,8 @@ var decoded = txms.decode(string);
 - `encode(hex: string): string` — Convert hex transaction into UTF-16BE.
 - `decode(data: string): string` — Convert UTF-16BE into hex transaction.
 - `getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> }` — Get an object of SMS endpoints (phone numbers) per country.
-- `sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean): string` — Create an SMS URI based on the provided parameters.
+- `sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an SMS URI based on the provided parameters.
+- `mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an MMS URI based on the provided parameters.
 
 ### Parameters
 
@@ -143,6 +149,7 @@ var decoded = txms.decode(string);
 - `number` = boolean, string, number, or array of these, representing the phone number(s) for the SMS.
 - `message` = the SMS message content.
 - `encodeMessage` (default: `true`) = whether to encode the message before using `encodeURIComponent`.
+- `platform` = the platform to use for the SMS URI. Currently supported: `ios`, `global`. Default: `global`. `ios` uses the `&body=`, while `global` uses the `?` for `?body=` parameter.
 
 ## CLI
 
@@ -204,21 +211,38 @@ This tool doesn't encrypt, it converts. Therefore, anyone can read your signed t
 
 Stay safe. Do not broadcast your private key or any sensitive data you wish to safeguard.
 
+## Server processors
+
+You can deploy your own server to process the SMS/MMS messages.
+
+DataLayer is offering [open-source server](https://github.com/DataLayerHost/txms-server) processor for SMS and MMS messages.
+
 ## Pricing considerations
 
 The service is free to use, but you may incur charges from your mobile provider.
 
 Prices may vary depending on the provider and the country.
 
-In Slovakia, for example, the price is 0.06 EUR (worldwide) per SMS. This can be 0.18 - 0.24 EUR for a 3,4-part SMS which corresponds to one transaction.
+In Slovakia, for example, the price is 0.06 EUR (worldwide) per SMS. This can be 0.12 - 0.18 EUR for a 2,3-part SMS which corresponds to one transaction.
+
+This is placing TxMS in slight preference (2 or 3 messages), because it is more efficient than HEX (3 messages).
 
 ### MMS
 
-If you need to send a larger transaction, you can use MMS (Multimedia Messaging Service). This service is not supported by this tool.
+If you need to send a larger transaction, you can use MMS (Multimedia Messaging Service).
 
 MMS is better suited for larger files and Blockchain transactions.
 
-The MMS text limit is 5000 characters. MMS object has a limit of 2048 KB.
+One MMS has 1600 characters. The MMS text limit is 5000 characters. MMS object has a limit of 2048 KB.
+
+To send MMS, you can use two options:
+
+- You can place the content as text document with extension `.txms` and send it to the same number. Each transaction can be divided with new line. You can place multiple `txms` files in one MMS.
+- Place transaction(s) in the text message body and send it to the same number. Each transaction can be divided with new line.
+
+MMS has about the same price as SMS (in Slovakia), but the downside is that smartphone should have enabled the MMS service and the data are stored on 3rd party server.
+
+Warning: MMS documents are stored on the server and available to download for certain period of time.
 
 ## Contributions
 
@@ -231,6 +255,17 @@ We welcome:
 - Creating your own [SMS endpoint](#sms-endpoint)
 - Sending us some Øres / ₡ores: [cb7147879011ea207df5b35a24ca6f0859dcfb145999](https://blockindex.net/address/cb7147879011ea207df5b35a24ca6f0859dcfb145999)
 - Starring this repository
+
+To contribute, please follow the steps:
+
+1. Fork the repository.
+2. Create a new branch.
+3. Make your changes.
+4. Commit your changes.
+5. Push your changes.
+6. Open a pull request.
+
+Please ensure your code is well-documented and follows the project's coding standards.
 
 ## License
 

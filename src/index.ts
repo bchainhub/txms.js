@@ -79,10 +79,18 @@ const txms: txms.Transport = {
 		}
 	},
 
-	sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage: boolean = true): string {
+	sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage: boolean = true, platform: string = 'global'): string {
+		return this.generateMessageUri('sms', number, message, network, encodeMessage, platform);
+	},
+
+	mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage: boolean = true, platform: string = 'global'): string {
+		return this.generateMessageUri('mms', number, message, network, encodeMessage, platform);
+	},
+
+	generateMessageUri(type: 'sms' | 'mms', number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage: boolean = true, platform: string = 'global'): string {
 		let endpoint: string | undefined;
 		let netw: number;
-		if (!network || network === 1 || network === "mainnet") {
+		if (!network || network === 1 || network === 'mainnet') {
 			netw = 1;
 		} else if (typeof network === 'string') {
 			netw = aliases[network.toLowerCase()];
@@ -122,7 +130,7 @@ const txms: txms.Transport = {
 			}
 		}
 
-		return endpoint ? `sms:${endpoint}${encodedMessage ? `?body=${encodedMessage}` : ''}` : `sms:?body=${encodedMessage}`;
+		return endpoint ? `${type}:${endpoint}${encodedMessage ? `${platform === 'ios' ? '&' : '?'}body=${encodedMessage}` : ''}` : `${type}:${platform === 'ios' ? '&' : '?'}body=${encodedMessage}`;
 	}
 };
 
@@ -133,7 +141,9 @@ declare namespace txms {
 		encode(hex: string): string;
 		decode(data: string): string;
 		getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> };
-		sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean): string;
+		sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
+		mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
+		generateMessageUri(type: 'sms' | 'mms', number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	}
 	interface Error extends globalThis.Error {
 		code?: number;

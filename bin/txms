@@ -3,14 +3,12 @@
 const txms = require('../');
 
 if (process.stdin.isTTY) {
-	// No piped input, process command-line arguments directly
 	const typ = process.argv[2];
 	const value = process.argv[3];
 	const loc = process.argv[4];
 
 	run(typ, value, loc);
 } else {
-	// Handle piped input
 	let content = '';
 	process.stdin.setEncoding('utf8');
 	process.stdin.on('data', (buf) => {
@@ -52,8 +50,11 @@ function run(typ, value, loc) {
 		} else if (typ === 'sms') {
 			const sms = txms.sms(true, value);
 			process.stdout.write(`${sms}\n`);
+		} else if (typ === 'mms') {
+			const mms = txms.mms(true, value);
+			process.stdout.write(`${mms}\n`);
 		} else {
-			throw new Error('Invalid type specified. Use "encode", "decode", "getendpoint", or "sms".');
+			throw new Error('Invalid type specified. Use "encode", "decode", "getendpoint", "sms", or "mms".');
 		}
 		process.exit(0);
 	} catch (err) {

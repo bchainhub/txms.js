@@ -2,9 +2,9 @@
 	"compilerOptions": {
 		"target": "ES6",
 		"module": "commonjs",
-		"outDir": "./src",
+		"outDir": "./dist",
 		"declaration": true,
-		"rootDir": "./ts_src",
+		"rootDir": "./src",
 		"types": [
 			"node"
 		],
@@ -22,7 +22,7 @@
 		"noUnusedParameters": true
 	},
 	"include": [
-		"ts_src/**/*.ts"
+		"src/**/*.ts"
 	],
 	"exclude": [
 		"**/*.spec.ts",
