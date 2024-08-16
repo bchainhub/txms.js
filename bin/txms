@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const txms = require('../');
+import txms from '../dist/index.js';
 
 if (process.stdin.isTTY) {
 	const typ = process.argv[2];

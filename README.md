@@ -118,19 +118,25 @@ yarn add txms.js
 
 ### Importing
 
-```js
+#### ES Module Syntax (Recommended for Modern JavaScript/TypeScript)
+
+```ts
 import txms from 'txms.js';
 let encoded = txms.encode(hex);
 let decoded = txms.decode(string);
 ```
 
-or
+#### CommonJS Syntax (Legacy Support)
 
 ```js
-var txms = require('txms.js');
+var txms = require('txms.js').default;
 var encoded = txms.encode(hex);
 var decoded = txms.decode(string);
 ```
+
+#### Dual Compatibility
+
+The library is designed to be compatible with both module systems, so you can choose the import style that best fits your project. Whether you’re working in a modern ES module environment or maintaining legacy CommonJS code, txms.js can be seamlessly integrated.
 
 ### Functions
 

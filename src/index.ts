@@ -134,7 +134,7 @@ const txms: txms.Transport = {
 	}
 };
 
-export = txms;
+export default txms;
 
 declare namespace txms {
 	interface Transport {

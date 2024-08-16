@@ -1,6 +1,6 @@
 {
 	"name": "txms.js",
-	"version": "1.1.1",
+	"version": "1.2.0",
 	"description": "Transaction messaging service protocol",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -9,11 +9,10 @@
 		"txms": "bin/txms"
 	},
 	"scripts": {
-		"build": "tsc -p ./tsconfig.json ; standard --fix",
-		"gitdiff": "npm run build && git diff --exit-code",
-		"standard": "standard",
-		"test": "npm run unit && npm run standard",
-		"unit": "tape test/*.js"
+		"build": "tsc -p ./tsconfig.json",
+		"test": "npm run unit",
+		"unit": "tape test/*.js",
+		"lint": "standard '**/*.js' --fix"
 	},
 	"engines": {
 		"node": ">= 14"
@@ -50,5 +49,6 @@
 		"standard": "^17.1.0",
 		"tape": "^5.8.1",
 		"typescript": "^5.5.4"
-	}
+	},
+	"packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
 }
