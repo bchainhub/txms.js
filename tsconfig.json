@@ -1,7 +1,8 @@
 {
 	"compilerOptions": {
-		"target": "ES6",
-		"module": "commonjs",
+		"target": "ES2017",
+		"module": "ESNext",
+		"moduleResolution": "node",
 		"outDir": "./dist",
 		"declaration": true,
 		"rootDir": "./src",
@@ -17,7 +18,7 @@
 		"strictPropertyInitialization": true,
 		"noImplicitThis": true,
 		"alwaysStrict": true,
-		"esModuleInterop": false,
+		"esModuleInterop": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
 	},
