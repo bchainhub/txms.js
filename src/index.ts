@@ -1,9 +1,22 @@
-const aliases: { [key: string]: number } = {
+export interface Transport {
+	encode(hex: string): string;
+	decode(data: string): string;
+	getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> };
+	sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
+	mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
+	generateMessageUri(type: 'sms' | 'mms', number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
+}
+
+export interface Error extends globalThis.Error {
+	code?: number;
+}
+
+export const aliases: { [key: string]: number } = {
 	'mainnet': 1,
 	'devin': 3,
 };
 
-const countries: Record<string, { [key: string]: string[] }> = {
+export const countries: Record<string, { [key: string]: string[] }> = {
 	'1': {
 		'global': ['+12019715152'],
 		'us': ['+12019715152'],
@@ -14,7 +27,19 @@ const countries: Record<string, { [key: string]: string[] }> = {
 	},
 };
 
-const txms: txms.Transport = {
+export function addAlias(name: string, id: number): void {
+	aliases[name] = id;
+}
+
+export function addCountry(networkId: number | string, countryCode: string, phoneNumbers: string[]): void {
+	const networkKey = networkId.toString();
+	if (!countries[networkKey]) {
+		countries[networkKey] = {};
+	}
+	countries[networkKey][countryCode] = phoneNumbers;
+}
+
+const txms: Transport = {
 	encode(hex: string): string {
 		let data = '';
 		if (hex.substring(0, 2).toLowerCase() === '0x') {
@@ -23,7 +48,7 @@ const txms: txms.Transport = {
 		const hextest = /^[0-9a-fA-F]+$/;
 		if (!hextest.test(hex)) {
 			const errorHex = new Error('Not a hex format');
-			(errorHex as txms.Error).code = 415;
+			(errorHex as Error).code = 415;
 			throw errorHex;
 		}
 		while (hex.length % 4 !== 0) {
@@ -135,17 +160,3 @@ const txms: txms.Transport = {
 };
 
 export default txms;
-
-declare namespace txms {
-	interface Transport {
-		encode(hex: string): string;
-		decode(data: string): string;
-		getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> };
-		sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
-		mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
-		generateMessageUri(type: 'sms' | 'mms', number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
-	}
-	interface Error extends globalThis.Error {
-		code?: number;
-	}
-}

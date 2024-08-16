@@ -104,13 +104,13 @@ The `sms` function has been extended to support multiple numbers. You can now pr
 
 ### Using NPM
 
-```sh
+```bash
 npm i txms.js
 ```
 
 ### Using Yarn
 
-```sh
+```bash
 yarn add txms.js
 ```
 
@@ -120,7 +120,7 @@ yarn add txms.js
 
 #### ES Module Syntax (Recommended for Modern JavaScript/TypeScript)
 
-```ts
+```typescript
 import txms from 'txms.js';
 let encoded = txms.encode(hex);
 let decoded = txms.decode(string);
@@ -128,7 +128,7 @@ let decoded = txms.decode(string);
 
 #### CommonJS Syntax (Legacy Support)
 
-```js
+```javascript
 var txms = require('txms.js').default;
 var encoded = txms.encode(hex);
 var decoded = txms.decode(string);
@@ -180,6 +180,38 @@ txms {type} {value} {location}
 ```bash
 echo {value} | txms {type} {location}
 ```
+
+## Extending Aliases and Countries
+
+The `aliases` and `countries` objects in `txms.js` are designed to be extendable, allowing you to add new networks and countries as needed.
+
+### Extending Aliases
+
+To add a new alias for a network, you can use the `addAlias` function:
+
+```typescript
+import { addAlias } from 'txms.js';
+
+// Add a new alias
+addAlias('testnet', 2);
+```
+
+This will allow you to use testnet as an alias for the network with ID `2`.
+
+### Extending Countries
+
+To add new country codes and phone numbers for a specific network, use the addCountry function:
+
+```typescript
+import { addCountry } from 'txms.js';
+
+// Add new country codes and phone numbers for the testnet
+addCountry(2, 'uk', ['+441234567890']);
+```
+
+This will associate the UK country code (`'uk'`) and the phone number `+441234567890` with the network ID `2`.
+
+These utility functions make it easy to customize `txms.js` to support additional networks and countries based on your needs.
 
 ## Tests
 

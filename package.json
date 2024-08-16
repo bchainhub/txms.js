@@ -1,6 +1,6 @@
 {
 	"name": "txms.js",
-	"version": "1.2.1",
+	"version": "1.2.2",
 	"description": "Transaction messaging service protocol",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
 		"test": "npm run unit",
 		"preunit": "npm run build",
 		"unit": "tape test/*.js",
-		"lint": "standard '**/*.js' --fix"
+		"lint": "eslint 'src/**/*.{js,ts}' --fix"
 	},
 	"engines": {
 		"node": ">= 14"
@@ -47,9 +47,10 @@
 	"license": "CORE",
 	"devDependencies": {
 		"@types/node": "^22.3.0",
-		"standard": "^17.1.0",
+		"@typescript-eslint/eslint-plugin": "^8.1.0",
+		"@typescript-eslint/parser": "^8.1.0",
+		"eslint": "^9.9.0",
 		"tape": "^5.8.1",
 		"typescript": "^5.5.4"
-	},
-	"packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
+	}
 }
