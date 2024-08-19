@@ -51,8 +51,8 @@ const txms: Transport = {
 			(errorHex as Error).code = 415;
 			throw errorHex;
 		}
-		while (hex.length % 4 !== 0) {
-			hex = '0' + hex;
+		if (hex.length % 4 !== 0) {
+			hex = '0'.repeat(4 - (hex.length % 4)) + hex;
 		}
 		for (let j = 0; j < hex.length; j += 4) {
 			let hexchar = hex.substring(j, j + 4);
@@ -67,13 +67,13 @@ const txms: Transport = {
 		let l;
 		for (l = 0; l < data.length; l++) {
 			if (data[l] === '~') {
-				hex += ('000' + data.charCodeAt(l + 1).toString(16)).slice(-2) + ('000' + data.charCodeAt(l + 2).toString(16)).slice(-2);
+				hex += ('00' + data.charCodeAt(l + 1).toString(16)).slice(-2) + ('00' + data.charCodeAt(l + 2).toString(16)).slice(-2);
 				l = l + 2;
 			} else {
-				hex += ((l === 0 ? '' : '000') + data.charCodeAt(l).toString(16)).slice(-4);
+				hex += ('0000' + data.charCodeAt(l).toString(16)).slice(-4);
 			}
 		}
-		return '0x' + hex;
+		return '0x' + hex.replace(/^0+/, '');
 	},
 
 	getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> } {
