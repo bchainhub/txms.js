@@ -54,8 +54,8 @@ function run(typ, value, loc) {
 			const mms = txms.mms(true, value);
 			process.stdout.write(`${mms}\n`);
 		} else if (typ === 'download' || typ === 'dl') {
-			txms.downloadMessage(value, loc);
-			process.stdout.write(`TxMS downloaded as file\n`);
+			const filename = txms.downloadMessage(value, loc);
+			process.stdout.write(`TxMS file was downloaded as "${filename}" in your working directory.\n`);
 		} else {
 			throw new Error('Invalid type specified.');
 		}

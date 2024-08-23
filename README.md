@@ -145,6 +145,7 @@ The library is designed to be compatible with both module systems, so you can ch
 - `getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> }` — Get an object of SMS endpoints (phone numbers) per country.
 - `sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an SMS URI based on the provided parameters.
 - `mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an MMS URI based on the provided parameters.
+- `downloadMessage(hex: string, optionalFilename?: string): Promise<string>` — Download a file with the encoded content as `.txms.txt` file in your working directory.
 
 ### Parameters
 
@@ -171,7 +172,7 @@ npm i -g txms.js
 txms {type} {value} {location}
 ```
 
-- type: `encode` (`e`), `decode` (`d`), `getendpoint` (`g`)
+- type: `encode` (`e`), `decode` (`d`), `getendpoint` (`g`), `sms`, `mms`, `download` (`dl`)
 - value: message; network for getendpoint
 - location: ISO 3166 Alpha-2 country/ies code/s for getendpoint
 
