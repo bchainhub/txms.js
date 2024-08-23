@@ -53,8 +53,11 @@ function run(typ, value, loc) {
 		} else if (typ === 'mms') {
 			const mms = txms.mms(true, value);
 			process.stdout.write(`${mms}\n`);
+		} else if (typ === 'download' || typ === 'dl') {
+			txms.downloadMessage(value, loc);
+			process.stdout.write(`TxMS downloaded as file\n`);
 		} else {
-			throw new Error('Invalid type specified. Use "encode", "decode", "getendpoint", "sms", or "mms".');
+			throw new Error('Invalid type specified.');
 		}
 		process.exit(0);
 	} catch (err) {
