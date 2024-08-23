@@ -1,6 +1,3 @@
-import fs from 'fs';
-import { Buffer } from 'buffer';
-
 export interface Transport {
 	encode(hex: string): string;
 	decode(data: string): string;
@@ -8,7 +5,7 @@ export interface Transport {
 	sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	generateMessageUri(type: 'sms' | 'mms', number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
-	downloadMessage(hex: string, optionalFilename?: string): void;
+	downloadMessage(hex: string, optionalFilename?: string): Promise<string>;
 }
 
 export interface Error extends globalThis.Error {
@@ -170,19 +167,36 @@ const txms: Transport = {
 		return endpoint ? `${type}:${endpoint}${encodedMessage ? `${platform === 'ios' ? '&' : '?'}body=${encodedMessage}` : ''}` : `${type}:${platform === 'ios' ? '&' : '?'}body=${encodedMessage}`;
 	},
 
-	downloadMessage(hex: string, optionalFilename?: string): void {
+	async downloadMessage(hex: string, optionalFilename?: string): Promise<string> {
 		const encodedMessage = this.encode(hex);
 
 		let filename: string;
 		const cleanedHex = hex.startsWith('0x') ? hex.slice(2) : hex;
-		const first6 = cleanedHex.slice(0, 6);
-		const last6 = cleanedHex.slice(-6);
-		filename = `${first6}${last6}.txms.txt`;
-		if (optionalFilename) {
-			filename = `${slugify(filename)}.txms.txt`;
+		if (cleanedHex.length < 12) {
+			filename = `${cleanedHex}.txms.txt`;
+		} else {
+			const first6 = cleanedHex.slice(0, 6);
+			const last6 = cleanedHex.slice(-6);
+			filename = `${first6}${last6}.txms.txt`;
 		}
-		const buffer = Buffer.from(encodedMessage, 'utf16le').swap16();
-		fs.writeFileSync(filename, buffer);
+
+		if (optionalFilename) {
+			filename = `${slugify(optionalFilename)}.txms.txt`;
+		}
+
+		if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+			const fs = await import('fs');
+			fs.writeFileSync(filename, encodedMessage);
+		} else {
+			const blob = new Blob([encodedMessage], { type: 'text/plain;charset=utf-16' });
+
+			const link = document.createElement('a');
+			link.href = URL.createObjectURL(blob);
+			link.download = filename;
+			link.click();
+		}
+
+		return filename;
 	}
 };
 
