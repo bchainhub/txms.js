@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 export interface Transport {
 	encode(hex: string): string;
 	decode(data: string): string;
@@ -5,6 +7,7 @@ export interface Transport {
 	sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	generateMessageUri(type: 'sms' | 'mms', number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
+	downloadMessage(hex: string, optionalFilename?: string): void;
 }
 
 export interface Error extends globalThis.Error {
@@ -37,6 +40,14 @@ export function addCountry(networkId: number | string, countryCode: string, phon
 		countries[networkKey] = {};
 	}
 	countries[networkKey][countryCode] = phoneNumbers;
+}
+
+function slugify(str: string): string {
+	return str
+		.toLowerCase()
+		.replace(/[^\w\s-]/g, '')
+		.replace(/[\s_-]+/g, '-')
+		.replace(/^-+|-+$/g, '');
 }
 
 const txms: Transport = {
@@ -156,6 +167,21 @@ const txms: Transport = {
 		}
 
 		return endpoint ? `${type}:${endpoint}${encodedMessage ? `${platform === 'ios' ? '&' : '?'}body=${encodedMessage}` : ''}` : `${type}:${platform === 'ios' ? '&' : '?'}body=${encodedMessage}`;
+	},
+
+	downloadMessage(hex: string, optionalFilename?: string): void {
+		const encodedMessage = this.encode(hex);
+
+		let filename: string;
+		const cleanedHex = hex.startsWith('0x') ? hex.slice(2) : hex;
+		const first6 = cleanedHex.slice(0, 6);
+		const last6 = cleanedHex.slice(-6);
+		filename = `${first6}${last6}.txms.txt`;
+		if (optionalFilename) {
+			filename = `${slugify(filename)}.txms.txt`;
+		}
+		const buffer = Buffer.from(encodedMessage, 'utf16le').swap16();
+		fs.writeFileSync(filename, buffer);
 	}
 };
 
