@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { Buffer } from 'buffer';
 
 export interface Transport {
 	encode(hex: string): string;

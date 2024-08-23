@@ -1,6 +1,6 @@
 {
 	"name": "txms.js",
-	"version": "1.2.4",
+	"version": "1.2.5",
 	"description": "Transaction messaging service protocol",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
