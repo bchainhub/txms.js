@@ -145,7 +145,9 @@ The library is designed to be compatible with both module systems, so you can ch
 - `getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> }` — Get an object of SMS endpoints (phone numbers) per country.
 - `sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an SMS URI based on the provided parameters.
 - `mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an MMS URI based on the provided parameters.
-- `downloadMessage(hex: string, optionalFilename?: string): Promise<string>` — Download a file with the encoded content as `.txms.txt` file in your working directory.
+- `downloadMessage(hex: string | string[], optionalFilename?: string): Promise<string>` — Download a file with the encoded content as `.txms.txt` file in your working directory. You can provide one hex transaction or an array of transactions (`.batch` will be prepended to suffix if batch is chosen and optional name not defined).
+
+Note: The `downloadMessage` function is asynchronous and returns a Promise. You can use the `await` keyword to wait for the Promise to resolve. The function will download a file with the encoded content as a `(.batch).txms.txt` file in your working directory. You can optionally provide a filename as the second parameter. It is designed to be used in Node.js environments as well as Browser. It is not designed to download high amount of files. if you prefer to do your own download flow, you can use the `encode` function and save the result to a file.
 
 ### Parameters
 
@@ -157,6 +159,7 @@ The library is designed to be compatible with both module systems, so you can ch
 - `message` = the SMS message content.
 - `encodeMessage` (default: `true`) = whether to encode the message before using `encodeURIComponent`.
 - `platform` = the platform to use for the SMS URI. Currently supported: `ios`, `global`. Default: `global`. `ios` uses the `&body=`, while `global` uses the `?` for `?body=` parameter.
+- `optionalFilename` = the optional filename for the downloaded file suffixed with `.txms.txt`. Filename is slugified.
 
 ## CLI
 
@@ -169,17 +172,17 @@ npm i -g txms.js
 ### Getting started
 
 ```bash
-txms {type} {value} {location}
+txms {type} {value} {value1}
 ```
 
-- type: `encode` (`e`), `decode` (`d`), `getendpoint` (`g`), `sms`, `mms`, `download` (`dl`)
-- value: message; network for getendpoint
-- location: ISO 3166 Alpha-2 country/ies code/s for getendpoint
+- type: `version` (`v`), `encode` (`e`), `decode` (`d`), `getendpoint` (`g`), `sms`, `mms`, `download` (`dl`)
+- value: 1st parameter for the type
+- value1: 2nd parameter for the type
 
 ### Piping
 
 ```bash
-echo {value} | txms {type} {location}
+echo {value} | txms {type} {value1}
 ```
 
 ## Extending Aliases and Countries
@@ -276,7 +279,7 @@ One MMS has 1600 characters. The MMS text limit is 5000 characters. MMS object h
 
 To send MMS, you can use two options:
 
-- You can place the content as text document with extension `.txms` and send it to the same number. Each transaction can be divided with new line. You can place multiple `txms` files in one MMS.
+- You can place the content as text document (text/plain) with extension `.txms.txt` and send it to the same number. Each transaction can be divided with new line. You can place multiple `txms` files into one MMS.
 - Place transaction(s) in the text message body and send it to the same number. Each transaction can be divided with new line.
 
 MMS has about the same price as SMS (in Slovakia), but the downside is that smartphone should have enabled the MMS service and the data are stored on 3rd party server.
@@ -290,19 +293,19 @@ You're welcome to contribute in any capacity.
 We welcome:
 
 - Forking [this repository](https://github.com/bchainhub/txms.js/fork)
+- Starring [this repository](https://github.com/bchainhub/txms.js/stargazers)
 - Opening a [pull request](https://github.com/bchainhub/txms.js/pulls)
 - Creating your own [SMS endpoint](#sms-endpoint)
 - Sending us some Øres / ₡ores: [cb7147879011ea207df5b35a24ca6f0859dcfb145999](https://blockindex.net/address/cb7147879011ea207df5b35a24ca6f0859dcfb145999)
-- Starring this repository
 
-To contribute, please follow the steps:
+### To Contribute, Please Follow These Steps
 
-1. Fork the repository.
+1. [Fork the repository](https://github.com/bchainhub/txms.js/fork).
 2. Create a new branch.
 3. Make your changes.
 4. Commit your changes.
 5. Push your changes.
-6. Open a pull request.
+6. [Open a pull request](https://github.com/bchainhub/txms.js/pulls).
 
 Please ensure your code is well-documented and follows the project's coding standards.
 
