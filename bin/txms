@@ -5,9 +5,9 @@ import txms from '../dist/index.js';
 if (process.stdin.isTTY) {
 	const typ = process.argv[2];
 	const value = process.argv[3];
-	const loc = process.argv[4];
+	const value1 = process.argv[4];
 
-	run(typ, value, loc);
+	run(typ, value, value1);
 } else {
 	let content = '';
 	process.stdin.setEncoding('utf8');
@@ -19,33 +19,38 @@ if (process.stdin.isTTY) {
 
 		let value = content;
 		let typ = process.argv[2];
-		let loc = process.argv[3];
+		let value1 = process.argv[3];
 
 		if (!content) {
 			value = process.argv[2];
 			typ = process.argv[3];
-			loc = process.argv[4];
+			value1 = process.argv[4];
 		}
 
-		run(typ, value, loc);
+		run(typ, value, value1);
 	});
 }
 
-function run(typ, value, loc) {
+function run(typ, value, value1) {
 	if (!value) {
 		process.stderr.write('value is required\n');
 		process.exit(1);
 	}
 
 	try {
-		if (typ === 'encode' || typ === 'e') {
+		if (typ === 'version' || typ === 'v') {
+			const packageJsonPath = join(__dirname, '../package.json');
+			const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+			const version = packageJson.version;
+			process.stdout.write(`TxMS version: ${version}\n`);
+		} else if (typ === 'encode' || typ === 'e') {
 			const encoded = txms.encode(value);
 			process.stdout.write(`${encoded}\n`);
 		} else if (typ === 'decode' || typ === 'd') {
 			const decoded = txms.decode(value);
 			process.stdout.write(`${decoded}\n`);
 		} else if (typ === 'getendpoint' || typ === 'g') {
-			const endpoint = txms.getEndpoint(value, loc);
+			const endpoint = txms.getEndpoint(value, value1);
 			process.stdout.write(`${JSON.stringify(endpoint, null, 2)}\n`);
 		} else if (typ === 'sms') {
 			const sms = txms.sms(true, value);
@@ -54,8 +59,13 @@ function run(typ, value, loc) {
 			const mms = txms.mms(true, value);
 			process.stdout.write(`${mms}\n`);
 		} else if (typ === 'download' || typ === 'dl') {
-			const filename = txms.downloadMessage(value, loc);
-			process.stdout.write(`TxMS file was downloaded as "${filename}" in your working directory.\n`);
+			txms.downloadMessage(value, value1).then((filename) => {
+				process.stdout.write(`TxMS file was downloaded as "${filename}" in your working directory.\n`);
+				process.exit(0);
+			}).catch((err) => {
+				process.stderr.write(`${err.message}\n`);
+				process.exit(1);
+			});
 		} else {
 			throw new Error('Invalid type specified.');
 		}

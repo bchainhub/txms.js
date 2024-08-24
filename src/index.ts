@@ -5,7 +5,7 @@ export interface Transport {
 	sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	generateMessageUri(type: 'sms' | 'mms', number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
-	downloadMessage(hex: string, optionalFilename?: string): Promise<string>;
+	downloadMessage(hex: string | string[], optionalFilename?: string): Promise<string>;
 }
 
 export interface Error extends globalThis.Error {
@@ -167,37 +167,60 @@ const txms: Transport = {
 		return endpoint ? `${type}:${endpoint}${encodedMessage ? `${platform === 'ios' ? '&' : '?'}body=${encodedMessage}` : ''}` : `${type}:${platform === 'ios' ? '&' : '?'}body=${encodedMessage}`;
 	},
 
-	async downloadMessage(hex: string, optionalFilename?: string): Promise<string> {
-		const encodedMessage = this.encode(hex);
+	async downloadMessage(hex: string | string[], optionalFilename?: string): Promise<string> {
+		// If hex is an array, join the encoded messages with newlines
+		const encodedMessage = Array.isArray(hex)
+			? hex.map(h => this.encode(h)).join('\n')
+			: this.encode(hex);
 
 		let filename: string;
-		const cleanedHex = hex.startsWith('0x') ? hex.slice(2) : hex;
+		// Use the first hex string for filename derivation, regardless of array or string input
+		const cleanedHex = (Array.isArray(hex) ? hex[0] : hex).toLowerCase().startsWith('0x')
+			? (Array.isArray(hex) ? hex[0] : hex).slice(2)
+			: (Array.isArray(hex) ? hex[0] : hex);
 		if (cleanedHex.length < 12) {
-			filename = `${cleanedHex}.txms.txt`;
+			filename = cleanedHex;
 		} else {
 			const first6 = cleanedHex.slice(0, 6);
 			const last6 = cleanedHex.slice(-6);
-			filename = `${first6}${last6}.txms.txt`;
+			filename = `${first6}${last6}`;
 		}
 
+		// If the input is an array with more than one item and no optional filename, append .batch
+		if (Array.isArray(hex) && hex.length > 1 && !optionalFilename) {
+			filename = `${filename}.batch`;
+		}
+
+		// Final filename composition
 		if (optionalFilename) {
 			filename = `${slugify(optionalFilename)}.txms.txt`;
+		} else {
+			filename = `${filename}.txms.txt`;
 		}
 
+		// Node.js environment check
+		/* eslint-disable no-undef */
 		if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+			// Node.js: Use 'fs' to write the file
 			const fs = await import('fs');
 			fs.writeFileSync(filename, encodedMessage);
-		} else {
+		} else if (typeof window !== 'undefined' && typeof Blob !== 'undefined' && typeof document !== 'undefined') {
+			// Browser environment
 			const blob = new Blob([encodedMessage], { type: 'text/plain;charset=utf-16' });
-
 			const link = document.createElement('a');
 			link.href = URL.createObjectURL(blob);
 			link.download = filename;
-			link.click();
+			document.body.appendChild(link);  // Append link to body
+			link.click();                     // Trigger download
+			document.body.removeChild(link);  // Clean up
+		} else {
+			throw new Error('Unsupported environment');
 		}
+		/* eslint-enable no-undef */
 
 		return filename;
 	}
+
 };
 
 export default txms;
