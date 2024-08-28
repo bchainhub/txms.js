@@ -114,7 +114,7 @@ const args = parseArgs(process.argv.slice(2));
 
 if (process.stdin.isTTY) {
 	// If the script is run with a TTY, process the command-line arguments
-	run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename);
+	run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, '\n');
 } else {
 	// If data is being piped into the script, capture it
 	let content = '';
@@ -126,16 +126,16 @@ if (process.stdin.isTTY) {
 		content = content.trim();
 
 		if (!content) {
-			run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename);
+			run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, '');
 		} else {
-			run(args.kind, content, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename);
+			run(args.kind, content, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, '');
 		}
 	});
 }
 
-async function run(kind, value, output, countryCodes, phoneNumbers, download, filename) {
+async function run(kind, value, output, countryCodes, phoneNumbers, download, filename, newline) {
 	if (!value && kind !== 'version') {
-		process.stderr.write('Value is required\n');
+		process.stderr.write('Value is required' + newline);
 		process.exit(1);
 	}
 
@@ -148,20 +148,20 @@ async function run(kind, value, output, countryCodes, phoneNumbers, download, fi
 			const packageJsonPath = path.join(__dirname, '../package.json');
 			const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
 			const version = packageJson.version;
-			process.stdout.write(version);
+			process.stdout.write(version + newline);
 			process.exit(0);
 		} else if (kind === 'encode' || kind === 'e') {
 			if (download) {
 				const filenm = await txms.downloadMessage(value, filename ? filename : undefined, output);
-				process.stdout.write(`TxMS file was downloaded as "${filenm}".\n`);
+				process.stdout.write(`TxMS file was downloaded as "${filenm}".${newline}`);
 			} else {
 				const encoded = txms.encode(value);
-				process.stdout.write(encoded);
+				process.stdout.write(encoded + newline);
 			}
 			process.exit(0);
 		} else if (kind === 'decode' || kind === 'd') {
 			const decoded = txms.decode(value);
-			process.stdout.write(decoded);
+			process.stdout.write(decoded + newline);
 			process.exit(0);
 		} else if (kind === 'getendpoint' || kind === 'g') {
 			const endpoint = txms.getEndpoint(value, countryCodes);
@@ -169,23 +169,23 @@ async function run(kind, value, output, countryCodes, phoneNumbers, download, fi
 				const numbers = endpoint[key].join(',');
 				return `${key}:${numbers}`;
 			}).join(';');
-			process.stdout.write(endpointString);
+			process.stdout.write(endpointString + newline);
 			process.exit(0);
 		} else if (kind === 'sms') {
 			const message = txms.encode(value);
 			const sms = txms.sms(phoneNumbers ? phoneNumbers.split(',') : true, message);
-			process.stdout.write(sms);
+			process.stdout.write(sms + newline);
 			process.exit(0);
 		} else if (kind === 'mms') {
 			const message = txms.encode(value);
 			const mms = txms.mms(phoneNumbers ? phoneNumbers.split(',') : true, message);
-			process.stdout.write(mms);
+			process.stdout.write(mms + newline);
 			process.exit(0);
 		} else {
-			throw new Error('Invalid type specified.');
+			throw new Error('Invalid type specified.' + newline);
 		}
 	} catch (err) {
-		process.stderr.write(`${err.message}\n`);
+		process.stderr.write(`${err.message}${newline}`);
 		process.exit(1);
 	}
 }
