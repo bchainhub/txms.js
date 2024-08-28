@@ -1,152 +1,266 @@
+import { test, describe } from 'node:test';
+import { spawnSync } from 'child_process';
+import assert from 'node:assert/strict';
+import path from 'path';
+import { JSDOM } from 'jsdom';
 import txms from '../dist/index.js';
-import tape from 'tape';
 import samples from './samples.json' assert { type: 'json' };
+import fs, { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
 
-samples.valid.forEach(function (f) {
-	tape.test('OK - Encode - to data. Description: ' + f.description + ' // hex: <' + f.hex.substring(0, 4) + f.hex.slice(-4) + '>', function (t) {
-		const actual = txms.encode(f.hex);
-		t.plan(1);
-		t.same(actual, f.data);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const txmsPath = path.resolve(__dirname, '../bin/txms');
+const outputDir = path.resolve(__dirname, './output');
+
+// Ensure the output directory exists
+if (!fs.existsSync(outputDir)) {
+	fs.mkdirSync(outputDir, { recursive: true });
+}
+
+// Encode/Decode Tests
+describe('Encode/Decode Tests', () => {
+	samples.valid.forEach((f) => {
+		test(`OK - Encode - to data. Description: ${f.description}`, () => {
+			const actual = txms.encode(f.hex);
+			assert.strictEqual(actual, f.data);
+		});
+	});
+
+	samples.valid.forEach((f) => {
+		test(`OK - Decode - to hex. Description: ${f.description}`, () => {
+			const actual = txms.decode(f.data);
+			const normalizedActual = actual.startsWith('0x') ? actual.slice(2) : actual;
+			const normalizedExpected = f.hex.startsWith('0x') ? f.hex.slice(2) : f.hex;
+			assert.strictEqual(normalizedActual, normalizedExpected);
+		});
+	});
+
+	samples.invalid.forEach((f) => {
+		test(`Encode — ${f.description}`, () => {
+			assert.throws(() => {
+				txms.encode(f.hex);
+			}, /Not a hex format/);
+		});
 	});
 });
 
-samples.valid.forEach(function (f) {
-	tape.test('OK - Decode - to hex. Description: ' + f.description + ' // data: <' + f.data.substring(0, 4) + f.data.slice(-4) + '>', function (t) {
-		const actual = txms.decode(f.data);
-		t.plan(1);
-		t.same(actual, f.hex);
+// Endpoint Tests
+describe('Endpoint Tests', () => {
+	test('Endpoints - Mainnet - should return object.', () => {
+		const endpoints = txms.getEndpoint(1, ['us', 'ca']);
+		assert.ok(endpoints instanceof Object);
+	});
+
+	test('Endpoints - Devin - should return object.', () => {
+		const endpoints = txms.getEndpoint('devin', ['bb', 'sx']);
+		assert.ok(endpoints instanceof Object);
+	});
+
+	test('Endpoints - Default: Mainnet - should return object.', () => {
+		const endpoints = txms.getEndpoint(undefined, ['us', 'ca']);
+		assert.ok(endpoints instanceof Object);
 	});
 });
 
-samples.invalid.forEach(function (f) {
-	tape.test('Encode — ' + f.description + ' // hex: <' + f.hex.substring(0, 4) + f.hex.slice(-4) + '>', function (t) {
-		t.plan(1);
-		t.throws(function () {
-			txms.encode(f.hex);
-		}, /Not a hex format/);
+// SMS/MMS Tests
+describe('SMS/MMS Tests', () => {
+	const hexMessage = samples.valid[0].hex;
+
+	test('SMS - Single number as string', () => {
+		const smsUri = txms.sms('+12019715152', hexMessage, 'mainnet');
+		assert.ok(smsUri.startsWith('sms:+12019715152?body='));
+	});
+
+	test('SMS - Single number as number', () => {
+		const smsUri = txms.sms(12019715152, hexMessage, 'mainnet');
+		assert.ok(smsUri.startsWith('sms:+12019715152?body='));
+	});
+
+	test('SMS - Multiple numbers as array', () => {
+		const smsUri = txms.sms(['+12019715152', '+12014835939'], hexMessage, 'mainnet');
+		assert.ok(smsUri.startsWith('sms:+12019715152,+12014835939?body='));
+	});
+
+	test('SMS - Default number with boolean true', () => {
+		const smsUri = txms.sms(true, hexMessage, 'mainnet');
+		assert.ok(smsUri.startsWith('sms:+12019715152?body='));
+	});
+
+	test('SMS - Invalid number format', () => {
+		assert.throws(() => {
+			txms.sms('2019715152', hexMessage, 'mainnet');
+		}, /Invalid number format/);
+	});
+
+	test('SMS - No number provided', () => {
+		const smsUri = txms.sms(false, hexMessage, 'mainnet');
+		assert.ok(smsUri.startsWith('sms:?body='));
+	});
+
+	test('SMS - Encoding hex message', () => {
+		const smsUri = txms.sms('+12019715152', hexMessage, 'mainnet', true);
+		assert.ok(smsUri.startsWith('sms:+12019715152?body='));
+	});
+
+	test('SMS - No encoding, only URL encode', () => {
+		const smsUri = txms.sms('+12019715152', hexMessage, 'mainnet', false);
+		assert.ok(smsUri.includes(encodeURIComponent(hexMessage)));
+	});
+
+	test('MMS - Single number as string', () => {
+		const mmsUri = txms.mms('+12019715152', hexMessage, 'mainnet');
+		assert.ok(mmsUri.startsWith('mms:+12019715152?body='));
+	});
+
+	test('MMS - Single number as number', () => {
+		const mmsUri = txms.mms(12019715152, hexMessage, 'mainnet');
+		assert.ok(mmsUri.startsWith('mms:+12019715152?body='));
+	});
+
+	test('MMS - Multiple numbers as array', () => {
+		const mmsUri = txms.mms(['+12019715152', '+12014835939'], hexMessage, 'mainnet');
+		assert.ok(mmsUri.startsWith('mms:+12019715152,+12014835939?body='));
+	});
+
+	test('MMS - Default number with boolean true', () => {
+		const mmsUri = txms.mms(true, hexMessage, 'mainnet');
+		assert.ok(mmsUri.startsWith('mms:+12019715152?body='));
+	});
+
+	test('MMS - Invalid number format', () => {
+		assert.throws(() => {
+			txms.mms('2019715152', hexMessage, 'mainnet');
+		}, /Invalid number format/);
+	});
+
+	test('MMS - No number provided', () => {
+		const mmsUri = txms.mms(false, hexMessage, 'mainnet');
+		assert.ok(mmsUri.startsWith('mms:?body='));
+	});
+
+	test('MMS - Encoding hex message', () => {
+		const mmsUri = txms.mms('+12019715152', hexMessage, 'mainnet', true);
+		assert.ok(mmsUri.startsWith('mms:+12019715152?body='));
+	});
+
+	test('MMS - No encoding, only URL encode', () => {
+		const mmsUri = txms.mms('+12019715152', hexMessage, 'mainnet', false);
+		assert.ok(mmsUri.includes(encodeURIComponent(hexMessage)));
 	});
 });
 
-tape.test('Endpoints - Mainnet - should return object.', function (t) {
-	const endpoints = txms.getEndpoint(1, ['us', 'ca']);
-	t.true(endpoints instanceof Object);
-	t.end();
+// Download Message Tests
+describe('Download Message Tests', () => {
+	// Node.js environment test
+	test('Should download message file in Node.js environment', async () => {
+		const hex = samples.valid[0].hex;
+
+		// Define the output directory
+		const outputDir = 'test/output';
+
+		// Download message to the test/output directory
+		const filename = await txms.downloadMessage(hex, 'nodejs testdata', outputDir);
+		assert.match(filename, new RegExp(`${outputDir}/nodejs-testdata\\.txms\\.txt$`));  // Ensure the file was saved in the output directory
+		assert.ok(fs.existsSync(filename));  // Check if the file actually exists
+	});
+
+	// Simulate the browser environment using jsdom
+	test('Should download message file in simulated browser environment', async () => {
+		// Create a new JSDOM instance, which simulates a browser environment
+		const { window } = new JSDOM();
+		global.window = window;
+		global.document = window.document;
+		global.Blob = window.Blob;
+		global.URL = window.URL;
+
+		const hex = samples.valid[0].hex;
+
+		// Ensure the filename does not conflict with Node.js test
+		const filename = await txms.downloadMessage(hex, 'browser-testdata', outputDir);
+
+		// Assert that the filename is correct (no path since it's a browser simulation)
+		assert.match(filename, /browser-testdata\.txms\.txt$/);
+
+		// Clean up the global variables after the test is done
+		delete global.window;
+		delete global.document;
+		delete global.Blob;
+		delete global.URL;
+	});
 });
 
-tape.test('Endpoints - Devin - should return object.', function (t) {
-	const endpoints = txms.getEndpoint('devin', ['bb', 'sx']);
-	t.true(endpoints instanceof Object);
-	t.end();
-});
+describe('CLI Tests', () => {
+	test('Should display version', () => {
+		const packageJsonPath = path.join(__dirname, '../package.json');
+		const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+		const version = packageJson.version;
+		const result = spawnSync('node', [txmsPath, '--version']);
+		assert.strictEqual(result.status, 0);
+		assert.strictEqual(result.stdout.toString(), version);
+	});
 
-tape.test('Endpoints - Default: Mainnet - should return object.', function (t) {
-	const endpoints = txms.getEndpoint(undefined, ['us', 'ca']);
-	t.true(endpoints instanceof Object);
-	t.end();
-});
+	test('Should encode a value', () => {
+		const hexValue = samples.valid[0].hex;
+		const result = spawnSync('node', [txmsPath, `--encode=${hexValue}`]);
+		assert.strictEqual(result.status, 0);
+		assert.ok(result.stdout.toString().trim().length > 0);
+	});
 
-const hexMessage = 'f8dc821ae4850ee6b280008252080196cb65d677385703c528527f2a0f0e401b4af1988d91c5896e3f4f2ab21845000080b8abcffa127f34f8dc8d8bc9a50da5def786a16ecab58d9d1cdc3e1347077f531ad0339797568345464f542f8da3bcd50fd683878f52e6d094610025d6e4a5fb3699acd20ebd1ec2fdde9d12f5e82fe5f4c8d9061466475b3293bb18c34504c6eb43bc0ba48d61a8edfda686c69773fa96b90d00760d8277330d90589ba26fb63874952b013a8af1a5edacbcabb37108b47518c79abd6e50be00da0a08fb9126fd265175cace1ac93d1f809b80';
+	test('Should decode a value', () => {
+		const encodedValue = samples.valid[0].data;
+		const result = spawnSync('node', [txmsPath, `-d="${encodedValue}"`]);
+		assert.strictEqual(result.status, 0);
+		assert.ok(result.stdout.toString().trim().startsWith('0x'));
+	});
 
-tape.test('SMS - Single number as string', function (t) {
-	const smsUri = txms.sms('+12019715152', hexMessage, 'mainnet');
-	t.ok(smsUri.startsWith('sms:+12019715152?body='));
-	t.end();
-});
+	test('Should return endpoints', () => {
+		const result = spawnSync('node', [txmsPath, '--getendpoint=1', '--countries=global,sk']);
+		const stdout = result.stdout.toString();
+		assert.strictEqual(result.status, 0);
+		assert.match(stdout, /^global:\+[\d,]+/);
+	});
 
-tape.test('SMS - Single number as number', function (t) {
-	const smsUri = txms.sms(12019715152, hexMessage, 'mainnet');
-	t.ok(smsUri.startsWith('sms:+12019715152?body='));
-	t.end();
-});
+	test('Should handle invalid input', () => {
+		const invalidhex = samples.invalid[0].hex;
+		const result = spawnSync('node', [txmsPath, `--encode=${invalidhex}`]);
+		assert.notStrictEqual(result.status, 0);
+		assert.match(result.stderr.toString(), /Not a hex format/);
+	});
 
-tape.test('SMS - Multiple numbers as array', function (t) {
-	const smsUri = txms.sms(['+12019715152', '+12014835939'], hexMessage, 'mainnet');
-	t.ok(smsUri.startsWith('sms:+12019715152,+12014835939?body='));
-	t.end();
-});
+	test('Should download message file in Node.js environment with specified output path', async () => {
+		const hexValue = samples.valid[0].hex;
+		const result = spawnSync('node', [txmsPath, '--download', `--encode=${hexValue}`, `-o=${outputDir}`]);
+		assert.strictEqual(result.status, 0);
+		assert.match(result.stdout.toString(), /^TxMS file was downloaded as ".*f8d880f38d00\.txms\.txt"\./);
+		assert.ok(fs.existsSync(outputDir + '/f8d880f38d00.txms.txt'));
+	});
 
-tape.test('SMS - Default number with boolean true', function (t) {
-	const smsUri = txms.sms(true, hexMessage, 'mainnet');
-	t.ok(smsUri.startsWith('sms:+12019715152?body='));
-	t.end();
-});
+	test('Should download message file in Node.js environment with specified output path and filename', async () => {
+		const hexValue = samples.valid[0].hex;
+		const result = spawnSync('node', [txmsPath, '--download', `--encode=${hexValue}`, `-o=${outputDir}`, '-f=cli-testdata']);
+		assert.strictEqual(result.status, 0);
+		assert.match(result.stdout.toString(), /^TxMS file was downloaded as ".*cli-testdata\.txms\.txt"\./);
+		assert.ok(fs.existsSync(outputDir + '/cli-testdata.txms.txt'));
+	});
 
-tape.test('SMS - Invalid number format', function (t) {
-	t.plan(1);
-	t.throws(function () {
-		txms.sms('2019715152', hexMessage, 'mainnet');
-	}, /Invalid number format/);
-	t.end();
-});
+	test('Should encode with piping', () => {
+		const hexValue = samples.valid[0].hex;
+		const echo = spawnSync('echo', [hexValue]);
+		const result = spawnSync('node', [txmsPath, '--encode'], {
+			input: echo.stdout
+		});
+		assert.strictEqual(result.status, 0);
+		assert.strictEqual(result.stdout.toString(), samples.valid[0].data);
+	});
 
-tape.test('SMS - No number provided', function (t) {
-	const smsUri = txms.sms(false, hexMessage, 'mainnet');
-	t.ok(smsUri.startsWith('sms:?body='));
-	t.end();
-});
-
-tape.test('SMS - Encoding hex message', function (t) {
-	const smsUri = txms.sms('+12019715152', hexMessage, 'mainnet', true);
-	// The encoded message will vary depending on the implementation of the encode function
-	t.ok(smsUri.startsWith('sms:+12019715152?body='));
-	t.end();
-});
-
-tape.test('SMS - No encoding, only URL encode', function (t) {
-	const smsUri = txms.sms('+12019715152', hexMessage, 'mainnet', false);
-	// Ensure the message is only URL encoded and not double encoded
-	t.ok(smsUri.includes(encodeURIComponent(hexMessage)));
-	t.end();
-});
-
-tape.test('MMS - Single number as string', function (t) {
-	const mmsUri = txms.mms('+12019715152', hexMessage, 'mainnet');
-	t.ok(mmsUri.startsWith('mms:+12019715152?body='));
-	t.end();
-});
-
-tape.test('MMS - Single number as number', function (t) {
-	const mmsUri = txms.mms(12019715152, hexMessage, 'mainnet');
-	t.ok(mmsUri.startsWith('mms:+12019715152?body='));
-	t.end();
-});
-
-tape.test('MMS - Multiple numbers as array', function (t) {
-	const mmsUri = txms.mms(['+12019715152', '+12014835939'], hexMessage, 'mainnet');
-	t.ok(mmsUri.startsWith('mms:+12019715152,+12014835939?body='));
-	t.end();
-});
-
-tape.test('MMS - Default number with boolean true', function (t) {
-	const mmsUri = txms.mms(true, hexMessage, 'mainnet');
-	t.ok(mmsUri.startsWith('mms:+12019715152?body='));
-	t.end();
-});
-
-tape.test('MMS - Invalid number format', function (t) {
-	t.plan(1);
-	t.throws(function () {
-		txms.mms('2019715152', hexMessage, 'mainnet');
-	}, /Invalid number format/);
-	t.end();
-});
-
-tape.test('MMS - No number provided', function (t) {
-	const mmsUri = txms.mms(false, hexMessage, 'mainnet');
-	t.ok(mmsUri.startsWith('mms:?body='));
-	t.end();
-});
-
-tape.test('MMS - Encoding hex message', function (t) {
-	const mmsUri = txms.mms('+12019715152', hexMessage, 'mainnet', true);
-	// The encoded message will vary depending on the implementation of the encode function
-	t.ok(mmsUri.startsWith('mms:+12019715152?body='));
-	t.end();
-});
-
-tape.test('MMS - No encoding, only URL encode', function (t) {
-	const mmsUri = txms.mms('+12019715152', hexMessage, 'mainnet', false);
-	// Ensure the message is only URL encoded and not double encoded
-	t.ok(mmsUri.includes(encodeURIComponent(hexMessage)));
-	t.end();
+	test('Should decode with piping', () => {
+		const dataValue = samples.valid[0].data;
+		const echo = spawnSync('echo', [dataValue]);
+		const result = spawnSync('node', [txmsPath, '--decode'], {
+			input: echo.stdout
+		});
+		assert.strictEqual(result.status, 0);
+		assert.strictEqual(result.stdout.toString().trim(), samples.valid[0].hex);
+	});
 });

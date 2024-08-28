@@ -5,7 +5,7 @@ export interface Transport {
 	sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	generateMessageUri(type: 'sms' | 'mms', number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
-	downloadMessage(hex: string | string[], optionalFilename?: string): Promise<string>;
+	downloadMessage(hex: string | string[], optionalFilename?: string, optionalPath?: string): Promise<string>;
 }
 
 export interface Error extends globalThis.Error {
@@ -97,7 +97,7 @@ const txms: Transport = {
 		if (!network) {
 			netw = 1;
 		} else if (typeof network === 'string') {
-			netw = aliases[network.toLowerCase()];
+			netw = aliases[network.toLowerCase()] !== undefined ? aliases[network.toLowerCase()] : parseInt(network, 10);
 		} else {
 			netw = network;
 		}
@@ -107,7 +107,10 @@ const txms: Transport = {
 		} else {
 			let endpoints: { [key: string]: string[] } = {};
 			for (let n = 0; n < requestedList.length; n++) {
-				endpoints[requestedList[n]] = countries[netw][requestedList[n]];
+				const countryCode = requestedList[n];
+				if (countries[netw] && countries[netw][countryCode]) {
+					endpoints[countryCode] = countries[netw][countryCode];
+				}
 			}
 			return endpoints;
 		}
@@ -167,7 +170,7 @@ const txms: Transport = {
 		return endpoint ? `${type}:${endpoint}${encodedMessage ? `${platform === 'ios' ? '&' : '?'}body=${encodedMessage}` : ''}` : `${type}:${platform === 'ios' ? '&' : '?'}body=${encodedMessage}`;
 	},
 
-	async downloadMessage(hex: string | string[], optionalFilename?: string): Promise<string> {
+	async downloadMessage(hex: string | string[], optionalFilename?: string, optionalPath?: string): Promise<string> {
 		// If hex is an array, join the encoded messages with newlines
 		const encodedMessage = Array.isArray(hex)
 			? hex.map(h => this.encode(h)).join('\n')
@@ -203,24 +206,37 @@ const txms: Transport = {
 		if (typeof process !== 'undefined' && process.versions && process.versions.node) {
 			// Node.js: Use 'fs' to write the file
 			const fs = await import('fs');
-			fs.writeFileSync(filename, encodedMessage);
+			const path = await import('path');
+
+			// If an optional path is provided, join it with the filename
+			const outputPath = optionalPath ? path.join(optionalPath, filename) : filename;
+
+			// Ensure the directory exists
+			const dir = path.dirname(outputPath);
+			if (!fs.existsSync(dir)) {
+				fs.mkdirSync(dir, { recursive: true });
+			}
+
+			fs.writeFileSync(outputPath, encodedMessage);
+			return outputPath;  // Return the full path of the created file
 		} else if (typeof window !== 'undefined' && typeof Blob !== 'undefined' && typeof document !== 'undefined') {
 			// Browser environment
+			// If an optional path is provided, prepend it to the filename (simulate a path structure)
+			const fullFilename = optionalPath ? `${optionalPath}/${filename}` : filename;
+
 			const blob = new Blob([encodedMessage], { type: 'text/plain;charset=utf-16' });
 			const link = document.createElement('a');
 			link.href = URL.createObjectURL(blob);
-			link.download = filename;
+			link.download = fullFilename;
 			document.body.appendChild(link);  // Append link to body
 			link.click();                     // Trigger download
 			document.body.removeChild(link);  // Clean up
+			return fullFilename;  // Return the "path/filename" (simulated for the browser)
 		} else {
 			throw new Error('Unsupported environment');
 		}
 		/* eslint-enable no-undef */
-
-		return filename;
 	}
-
 };
 
 export default txms;
