@@ -4,6 +4,7 @@
 .output
 /build
 /dist
+/test/output
 
 # OS
 .DS_Store

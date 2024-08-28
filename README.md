@@ -145,7 +145,7 @@ The library is designed to be compatible with both module systems, so you can ch
 - `getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> }` — Get an object of SMS endpoints (phone numbers) per country.
 - `sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an SMS URI based on the provided parameters.
 - `mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an MMS URI based on the provided parameters.
-- `downloadMessage(hex: string | string[], optionalFilename?: string): Promise<string>` — Download a file with the encoded content as `.txms.txt` file in your working directory. You can provide one hex transaction or an array of transactions (`.batch` will be prepended to suffix if batch is chosen and optional name not defined).
+- `downloadMessage(hex: string | string[], optionalFilename?: string, optionalPath?: string): Promise<string>` — Download a file with the encoded content as `.txms.txt` file in your working directory. You can provide one hex transaction or an array of transactions (`.batch` will be prepended to suffix if batch is chosen and optional name not defined).
 
 Note: The `downloadMessage` function is asynchronous and returns a Promise. You can use the `await` keyword to wait for the Promise to resolve. The function will download a file with the encoded content as a `(.batch).txms.txt` file in your working directory. You can optionally provide a filename as the second parameter. It is designed to be used in Node.js environments as well as Browser. It is not designed to download high amount of files. if you prefer to do your own download flow, you can use the `encode` function and save the result to a file.
 
@@ -160,6 +160,7 @@ Note: The `downloadMessage` function is asynchronous and returns a Promise. You 
 - `encodeMessage` (default: `true`) = whether to encode the message before using `encodeURIComponent`.
 - `platform` = the platform to use for the SMS URI. Currently supported: `ios`, `global`. Default: `global`. `ios` uses the `&body=`, while `global` uses the `?` for `?body=` parameter.
 - `optionalFilename` = the optional filename for the downloaded file suffixed with `.txms.txt`. Filename is slugified.
+- `optionalPath` = the optional path for the downloaded file. If not provided, the file will be saved in the working directory.
 
 ## CLI
 
@@ -172,17 +173,23 @@ npm i -g txms.js
 ### Getting started
 
 ```bash
-txms {type} {value} {value1}
+txms {type}={value}
 ```
 
-- type: `version` (`v`), `encode` (`e`), `decode` (`d`), `getendpoint` (`g`), `sms`, `mms`, `download` (`dl`)
-- value: 1st parameter for the type
-- value1: 2nd parameter for the type
+Types:
+
+- `--version` (`-v`) - Get the version of the library.
+- `--encode` (`-e`) - Encode the HEX transaction.
+- `--decode` (`-d`) - Decode the UTF-16BE transaction.
+- `--getendpoint` (`-g`) - Get the SMS/MMS endpoint for the network and country.
+- `--sms` - Create an SMS URI based on the provided parameters.
+- `--mms` - Create an MMS URI based on the provided parameters.
+- `--download` (`-dl`) - Boolean value to download a file with the encoded content as `.txms.txt` file in your working directory.
 
 ### Piping
 
 ```bash
-echo {value} | txms {type} {value1}
+echo {value} | txms {type}={value1}
 ```
 
 ## Extending Aliases and Countries

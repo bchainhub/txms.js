@@ -1,14 +1,122 @@
 #!/usr/bin/env node
 
+import { mkdirSync, readFileSync, existsSync } from 'fs';
+import { fileURLToPath } from 'url';
+import path from 'path';
 import txms from '../dist/index.js';
 
-if (process.stdin.isTTY) {
-	const typ = process.argv[2];
-	const value = process.argv[3];
-	const value1 = process.argv[4];
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-	run(typ, value, value1);
+// Helper function to parse command-line arguments with key-value pairs
+function parseArgs(argv) {
+	const args = {
+		kind: null, // The type of operation to perform
+		value: null, // This will hold the hex data for encode/decode
+		output: null, // For download output directory
+		filename: null, // For download filename
+		countryCodes: null, // For getEndpoint
+		phoneNumbers: null, // For SMS/MMS phone numbers
+		download: false, // Flag to indicate download
+	};
+
+	argv.forEach((arg) => {
+		if (arg.startsWith('--')) {
+			const [key, value] = arg.split('=');
+			switch (key) {
+				case '--version':
+					args.kind = 'version';
+					break;
+				case '--encode':
+					args.kind = 'encode';
+					args.value = value;
+					break;
+				case '--decode':
+					args.kind = 'decode';
+					args.value = value;
+					break;
+				case '--getendpoint':
+					args.kind = 'getendpoint';
+					args.value = value; // Network type for getEndpoint
+					break;
+				case '--sms':
+					args.kind = 'sms';
+					args.phoneNumbers = value; // Comma-separated phone numbers
+					break;
+				case '--mms':
+					args.kind = 'mms';
+					args.phoneNumbers = value; // Comma-separated phone numbers
+					break;
+				case '--download':
+					args.download = true;
+					break;
+				case '--output':
+					args.output = value;
+					break;
+				case '--filename':
+					args.filename = value;
+					break;
+				case '--countries':
+					args.countryCodes = value.split(','); // Comma-separated country codes
+					break;
+				default:
+					break;
+			}
+		} else if (arg.startsWith('-')) {
+			const [key, value] = arg.split('=');
+			switch (key) {
+				case '-v':
+					args.kind = 'version';
+					break;
+				case '-e':
+					args.kind = 'encode';
+					args.value = value;
+					break;
+				case '-d':
+					args.kind = 'decode';
+					args.value = value;
+					break;
+				case '-g':
+					args.kind = 'getendpoint';
+					args.value = value;
+					break;
+				case '-s':
+					args.kind = 'sms';
+					args.phoneNumbers = value;
+					break;
+				case '-m':
+					args.kind = 'mms';
+					args.phoneNumbers = value;
+					break;
+				case '-o':
+					args.output = value;
+					break;
+				case '-f':
+					args.filename = value;
+					break;
+				case '-c':
+					args.countryCodes = value.split(',');
+					break;
+				default:
+					break;
+			}
+		} else {
+			if (!args.value) {
+				args.value = arg;
+			}
+		}
+	});
+	return args;
+}
+
+// Parse the arguments
+const args = parseArgs(process.argv.slice(2));
+
+if (process.stdin.isTTY) {
+	// If the script is run with a TTY, process the command-line arguments
+	run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename);
 } else {
+	// If data is being piped into the script, capture it
 	let content = '';
 	process.stdin.setEncoding('utf8');
 	process.stdin.on('data', (buf) => {
@@ -17,59 +125,65 @@ if (process.stdin.isTTY) {
 	process.stdin.on('end', () => {
 		content = content.trim();
 
-		let value = content;
-		let typ = process.argv[2];
-		let value1 = process.argv[3];
-
 		if (!content) {
-			value = process.argv[2];
-			typ = process.argv[3];
-			value1 = process.argv[4];
+			run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename);
+		} else {
+			run(args.kind, content, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename);
 		}
-
-		run(typ, value, value1);
 	});
 }
 
-function run(typ, value, value1) {
-	if (!value) {
-		process.stderr.write('value is required\n');
+async function run(kind, value, output, countryCodes, phoneNumbers, download, filename) {
+	if (!value && kind !== 'version') {
+		process.stderr.write('Value is required\n');
 		process.exit(1);
 	}
 
 	try {
-		if (typ === 'version' || typ === 'v') {
-			const packageJsonPath = join(__dirname, '../package.json');
+		if (download && output && !existsSync(output)) {
+			mkdirSync(output, { recursive: true });
+		}
+
+		if (kind === 'version' || kind === 'v') {
+			const packageJsonPath = path.join(__dirname, '../package.json');
 			const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
 			const version = packageJson.version;
-			process.stdout.write(`TxMS version: ${version}\n`);
-		} else if (typ === 'encode' || typ === 'e') {
-			const encoded = txms.encode(value);
-			process.stdout.write(`${encoded}\n`);
-		} else if (typ === 'decode' || typ === 'd') {
+			process.stdout.write(version);
+			process.exit(0);
+		} else if (kind === 'encode' || kind === 'e') {
+			if (download) {
+				const filenm = await txms.downloadMessage(value, filename ? filename : undefined, output);
+				process.stdout.write(`TxMS file was downloaded as "${filenm}".\n`);
+			} else {
+				const encoded = txms.encode(value);
+				process.stdout.write(encoded);
+			}
+			process.exit(0);
+		} else if (kind === 'decode' || kind === 'd') {
 			const decoded = txms.decode(value);
-			process.stdout.write(`${decoded}\n`);
-		} else if (typ === 'getendpoint' || typ === 'g') {
-			const endpoint = txms.getEndpoint(value, value1);
-			process.stdout.write(`${JSON.stringify(endpoint, null, 2)}\n`);
-		} else if (typ === 'sms') {
-			const sms = txms.sms(true, value);
-			process.stdout.write(`${sms}\n`);
-		} else if (typ === 'mms') {
-			const mms = txms.mms(true, value);
-			process.stdout.write(`${mms}\n`);
-		} else if (typ === 'download' || typ === 'dl') {
-			txms.downloadMessage(value, value1).then((filename) => {
-				process.stdout.write(`TxMS file was downloaded as "${filename}" in your working directory.\n`);
-				process.exit(0);
-			}).catch((err) => {
-				process.stderr.write(`${err.message}\n`);
-				process.exit(1);
-			});
+			process.stdout.write(decoded);
+			process.exit(0);
+		} else if (kind === 'getendpoint' || kind === 'g') {
+			const endpoint = txms.getEndpoint(value, countryCodes);
+			let endpointString = Object.keys(endpoint).map(key => {
+				const numbers = endpoint[key].join(',');
+				return `${key}:${numbers}`;
+			}).join(';');
+			process.stdout.write(endpointString);
+			process.exit(0);
+		} else if (kind === 'sms') {
+			const message = txms.encode(value);
+			const sms = txms.sms(phoneNumbers ? phoneNumbers.split(',') : true, message);
+			process.stdout.write(sms);
+			process.exit(0);
+		} else if (kind === 'mms') {
+			const message = txms.encode(value);
+			const mms = txms.mms(phoneNumbers ? phoneNumbers.split(',') : true, message);
+			process.stdout.write(mms);
+			process.exit(0);
 		} else {
 			throw new Error('Invalid type specified.');
 		}
-		process.exit(0);
 	} catch (err) {
 		process.stderr.write(`${err.message}\n`);
 		process.exit(1);
