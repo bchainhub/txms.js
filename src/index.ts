@@ -1,6 +1,7 @@
 export interface Transport {
 	encode(hex: string): string;
 	decode(data: string): string;
+	count(hex: string, type?: 'sms' | 'mms' | true): number;
 	getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> };
 	sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
@@ -83,6 +84,47 @@ const txms: Transport = {
 			}
 		}
 		return '0x' + hex.replace(/^0+/, '');
+	},
+
+	count(hex: string, type?: 'sms' | 'mms' | true): number {
+		// Encode the hex string to the message
+		const message = this.encode(hex);
+
+		// If type is not provided, return the length of the message in characters
+		if (!type) {
+			return message.length;
+		}
+
+		// SMS calculation logic
+		if (type === 'sms') {
+			// UTF-16 encoding, so the character limit is 70 characters for a single SMS
+			const singleSmsLimit = 70;
+			const multipartSmsLimit = 67;  // Character limit per SMS in a concatenated message
+
+			if (message.length <= singleSmsLimit) {
+				// Fits within a single SMS
+				return 1;
+			} else {
+				// Calculate the number of segments required for a multipart SMS
+				return Math.ceil(message.length / multipartSmsLimit);
+			}
+		}
+
+		// MMS calculation logic
+		if (type === 'mms') {
+			// Assume a typical size limit of 300 KB for MMS (this may vary by carrier)
+			const mmsSizeLimit = 300 * 1024; // 300 KB in bytes
+			// Estimate size of the message in bytes (UTF-16, so each character is 2 bytes)
+			const messageSizeInBytes = message.length * 2;
+
+			if (messageSizeInBytes <= mmsSizeLimit) {
+				return 1;
+			} else {
+				return Math.ceil(messageSizeInBytes / mmsSizeLimit);
+			}
+		}
+
+		return message.length;
 	},
 
 	getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> } {

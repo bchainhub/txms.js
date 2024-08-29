@@ -18,6 +18,8 @@ function parseArgs(argv) {
 		countryCodes: null, // For getEndpoint
 		phoneNumbers: null, // For SMS/MMS phone numbers
 		download: false, // Flag to indicate download
+		countType: null, // Count type: sms, mms, or null for characters
+		showHelp: false, // Flag to indicate if help is requested
 	};
 
 	argv.forEach((arg) => {
@@ -34,6 +36,9 @@ function parseArgs(argv) {
 				case '--decode':
 					args.kind = 'decode';
 					args.value = value;
+					break;
+				case '--count':
+					args.countType = value || true;
 					break;
 				case '--getendpoint':
 					args.kind = 'getendpoint';
@@ -59,6 +64,9 @@ function parseArgs(argv) {
 				case '--countries':
 					args.countryCodes = value.split(','); // Comma-separated country codes
 					break;
+				case '--help':
+					args.showHelp = true;
+					break;
 				default:
 					break;
 			}
@@ -75,6 +83,9 @@ function parseArgs(argv) {
 				case '-d':
 					args.kind = 'decode';
 					args.value = value;
+					break;
+				case '-ct':
+					args.countType = value || true;
 					break;
 				case '-g':
 					args.kind = 'getendpoint';
@@ -97,6 +108,9 @@ function parseArgs(argv) {
 				case '-c':
 					args.countryCodes = value.split(',');
 					break;
+				case '-h':
+					args.showHelp = true;
+					break;
 				default:
 					break;
 			}
@@ -109,12 +123,46 @@ function parseArgs(argv) {
 	return args;
 }
 
+// Function to display help
+function displayHelp(newline = '\n') {
+	const helpText = `
+\x1b[1mUsage:\x1b[0m txms \x1b[38;5;214m[options]\x1b[0m
+
+\x1b[1mOptions:\x1b[0m
+	\x1b[38;5;214m-v, --version\x1b[0m        Get the version of the library.
+	\x1b[38;5;214m-e, --encode\x1b[0m         Encode the HEX transaction.
+	\x1b[38;5;214m-d, --decode\x1b[0m         Decode the UTF-16BE transaction.
+	\x1b[38;5;214m-ct, --count\x1b[0m         Count the number of characters needed for the transaction. You can choose the type of count: 'sms' or 'mms'.
+	\x1b[38;5;214m-g, --getendpoint\x1b[0m    Get the SMS/MMS endpoint for the network and country.
+	\x1b[38;5;214m-s, --sms\x1b[0m            Create an SMS URI based on the provided parameters.
+	\x1b[38;5;214m-m, --mms\x1b[0m            Create an MMS URI based on the provided parameters.
+	\x1b[38;5;214m-dl, --download\x1b[0m      Download a file with the encoded content as .txms.txt file in your working directory.
+	\x1b[38;5;214m-o, --output\x1b[0m         Specify the output directory for downloads.
+	\x1b[38;5;214m-f, --filename\x1b[0m       Specify the filename for downloads.
+	\x1b[38;5;214m-c, --countries\x1b[0m      Specify a comma-separated list of country codes.
+	\x1b[38;5;214m-h, --help\x1b[0m           Show this help message and exit.
+
+\x1b[1mExamples:\x1b[0m
+	txms --encode=yourHexValue
+	txms -e=yourHexValue --download
+	txms -d=yourUTF16String
+	echo yourHexValue | txms --encode
+`;
+	process.stdout.write(helpText + newline);
+}
+
 // Parse the arguments
 const args = parseArgs(process.argv.slice(2));
 
+// If the help flag is set, display the help message immediately
+if (args.showHelp && process.stdin.isTTY) {
+	displayHelp();
+	process.exit(0);
+}
+
 if (process.stdin.isTTY) {
 	// If the script is run with a TTY, process the command-line arguments
-	run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, '\n');
+	run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, args.countType, '\n');
 } else {
 	// If data is being piped into the script, capture it
 	let content = '';
@@ -124,16 +172,18 @@ if (process.stdin.isTTY) {
 	});
 	process.stdin.on('end', () => {
 		content = content.trim();
-
-		if (!content) {
-			run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, '');
+		if (!content && !args.showHelp) {
+			run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, args.countType, '');
+		} else if (args.showHelp) {
+			displayHelp();
+			process.exit(0);
 		} else {
-			run(args.kind, content, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, '');
+			run(args.kind, content, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, args.countType, '');
 		}
 	});
 }
 
-async function run(kind, value, output, countryCodes, phoneNumbers, download, filename, newline) {
+async function run(kind, value, output, countryCodes, phoneNumbers, download, filename, countType, newline) {
 	if (!value && kind !== 'version') {
 		process.stderr.write('Value is required' + newline);
 		process.exit(1);
@@ -152,12 +202,26 @@ async function run(kind, value, output, countryCodes, phoneNumbers, download, fi
 			process.exit(0);
 		} else if (kind === 'encode' || kind === 'e') {
 			if (download) {
-				const filenm = await txms.downloadMessage(value, filename ? filename : undefined, output);
-				process.stdout.write(`TxMS file was downloaded as "${filenm}".${newline}`);
-			} else {
-				const encoded = txms.encode(value);
-				process.stdout.write(encoded + newline);
+				const filenamePrint = await txms.downloadMessage(value, filename ? filename : undefined, output);
+				process.stdout.write(`TxMS file was downloaded as "${filenamePrint}".${newline}`);
+				process.exit(0);
 			}
+
+			if (countType) {
+				let calculated;
+				if (countType === 'sms') {
+					calculated = txms.count(value, 'sms');
+				} else if (countType === 'mms') {
+					calculated = txms.count(value, 'mms');
+				} else {
+					calculated = txms.count(value);
+				}
+				process.stdout.write(calculated + newline);
+				process.exit(0);
+			}
+
+			let encodedMessage = txms.encode(value);
+			process.stdout.write(encodedMessage + newline);
 			process.exit(0);
 		} else if (kind === 'decode' || kind === 'd') {
 			const decoded = txms.decode(value);
