@@ -142,6 +142,7 @@ The library is designed to be compatible with both module systems, so you can ch
 
 - `encode(hex: string): string` — Convert hex transaction into UTF-16BE.
 - `decode(data: string): string` — Convert UTF-16BE into hex transaction.
+- `count(data: string, type: 'sms' | 'mms'): number` — Count the number of characters/SMS/MMS needed for the transaction.
 - `getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> }` — Get an object of SMS endpoints (phone numbers) per country.
 - `sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an SMS URI based on the provided parameters.
 - `mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an MMS URI based on the provided parameters.
@@ -181,10 +182,12 @@ Types:
 - `--version` (`-v`) - Get the version of the library.
 - `--encode` (`-e`) - Encode the HEX transaction.
 - `--decode` (`-d`) - Decode the UTF-16BE transaction.
+- `--count` (`-ct`) - Count the number of characters needed for the transaction. You can choose type of count: `sms`, `mms`. (To perform a count, you need to provide `encode` command.)
 - `--getendpoint` (`-g`) - Get the SMS/MMS endpoint for the network and country.
 - `--sms` - Create an SMS URI based on the provided parameters.
 - `--mms` - Create an MMS URI based on the provided parameters.
-- `--download` (`-dl`) - Boolean value to download a file with the encoded content as `.txms.txt` file in your working directory.
+- `--download` (`-dl`) - Boolean value to download a file with the encoded content as `.txms.txt` file in your working directory. (To download a file, you need to provide `encode` command.)
+- `--help` (`-h`) - Show help. (Only for TTY mode.)
 
 ### Piping
 

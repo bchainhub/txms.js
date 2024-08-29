@@ -21,14 +21,14 @@ if (!fs.existsSync(outputDir)) {
 // Encode/Decode Tests
 describe('Encode/Decode Tests', () => {
 	samples.valid.forEach((f) => {
-		test(`OK - Encode - to data. Description: ${f.description}`, () => {
+		test(`Should encode - to data. Description: ${f.description}`, () => {
 			const actual = txms.encode(f.hex);
 			assert.strictEqual(actual, f.data);
 		});
 	});
 
 	samples.valid.forEach((f) => {
-		test(`OK - Decode - to hex. Description: ${f.description}`, () => {
+		test(`Should decode - to hex. Description: ${f.description}`, () => {
 			const actual = txms.decode(f.data);
 			const normalizedActual = actual.startsWith('0x') ? actual.slice(2) : actual;
 			const normalizedExpected = f.hex.startsWith('0x') ? f.hex.slice(2) : f.hex;
@@ -37,10 +37,31 @@ describe('Encode/Decode Tests', () => {
 	});
 
 	samples.invalid.forEach((f) => {
-		test(`Encode — ${f.description}`, () => {
+		test(`Should encode — ${f.description}`, () => {
 			assert.throws(() => {
 				txms.encode(f.hex);
 			}, /Not a hex format/);
+		});
+	});
+
+	samples.valid.forEach((f) => {
+		test(`Should count - characters. Description: ${f.description}`, () => {
+			const length = txms.count(f.hex);
+			assert.strictEqual(length, f.length);
+		});
+	});
+
+	samples.valid.forEach((f) => {
+		test(`Should count - SMS. Description: ${f.description}`, () => {
+			const lengthSms = txms.count(f.hex, 'sms');
+			assert.strictEqual(lengthSms, f.sms);
+		});
+	});
+
+	samples.valid.forEach((f) => {
+		test(`Should count - MMS. Description: ${f.description}`, () => {
+			const lengthSms = txms.count(f.hex, 'mms');
+			assert.strictEqual(lengthSms, f.mms);
 		});
 	});
 });
@@ -262,5 +283,42 @@ describe('CLI Tests', () => {
 		});
 		assert.strictEqual(result.status, 0);
 		assert.strictEqual(result.stdout.toString().trim(), samples.valid[0].hex);
+	});
+
+	test('Should count length', () => {
+		const hexValue = samples.valid[0].hex;
+		const result = spawnSync('node', [txmsPath, `--encode=${hexValue}`, '--count']);
+		assert.strictEqual(result.status, 0);
+		assert.strictEqual(parseInt(result.stdout.toString(), 10), samples.valid[0].length);
+	});
+
+	test('Should count amount of SMS', () => {
+		const hexValue = samples.valid[0].hex;
+		const result = spawnSync('node', [txmsPath, `--encode=${hexValue}`, '--count=sms']);
+		assert.strictEqual(result.status, 0);
+		assert.strictEqual(parseInt(result.stdout.toString(), 10), samples.valid[0].sms);
+	});
+
+	test('Should count amount of MMS', () => {
+		const hexValue = samples.valid[0].hex;
+		const result = spawnSync('node', [txmsPath, `--encode=${hexValue}`, '-ct=mms']);
+		assert.strictEqual(result.status, 0);
+		assert.strictEqual(parseInt(result.stdout.toString(), 10), samples.valid[0].mms);
+	});
+
+	test('Should count with piping', () => {
+		const hexValue = samples.valid[0].hex;
+		const echo = spawnSync('echo', [hexValue]);
+		const result = spawnSync('node', [txmsPath, '--encode', '--count'], {
+			input: echo.stdout
+		});
+		assert.strictEqual(result.status, 0);
+		assert.strictEqual(parseInt(result.stdout.toString(), 10), samples.valid[0].length);
+	});
+
+	test('Should print help text', () => {
+		const result = spawnSync('node', [txmsPath, '--help']);
+		assert.strictEqual(result.status, 0);
+		assert.match(result.stdout.toString(), /^\n\x1B\[1mUsage:\x1B\[0m txms \x1B\[38;5;214m\[options\]\x1B\[0m/);
 	});
 });
