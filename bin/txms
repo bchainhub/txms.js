@@ -99,6 +99,9 @@ function parseArgs(argv) {
 					args.kind = 'mms';
 					args.phoneNumbers = value;
 					break;
+				case '-dl':
+					args.download = true;
+					break;
 				case '-o':
 					args.output = value;
 					break;
