@@ -42,7 +42,7 @@ function parseArgs(argv) {
 					break;
 				case '--getendpoint':
 					args.kind = 'getendpoint';
-					args.value = value; // Network type for getEndpoint
+					args.value = value || 1; // Network type for getEndpoint
 					break;
 				case '--sms':
 					args.kind = 'sms';
@@ -89,7 +89,7 @@ function parseArgs(argv) {
 					break;
 				case '-g':
 					args.kind = 'getendpoint';
-					args.value = value;
+					args.value = value || 1;
 					break;
 				case '-s':
 					args.kind = 'sms';
@@ -239,13 +239,11 @@ async function run(kind, value, output, countryCodes, phoneNumbers, download, fi
 			process.stdout.write(endpointString + newline);
 			process.exit(0);
 		} else if (kind === 'sms') {
-			const message = txms.encode(value);
-			const sms = txms.sms(phoneNumbers ? phoneNumbers.split(',') : true, message);
+			const sms = txms.sms(phoneNumbers ? phoneNumbers.split(',') : true, value);
 			process.stdout.write(sms + newline);
 			process.exit(0);
 		} else if (kind === 'mms') {
-			const message = txms.encode(value);
-			const mms = txms.mms(phoneNumbers ? phoneNumbers.split(',') : true, message);
+			const mms = txms.mms(phoneNumbers ? phoneNumbers.split(',') : true, value);
 			process.stdout.write(mms + newline);
 			process.exit(0);
 		} else {
