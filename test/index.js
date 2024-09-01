@@ -316,6 +316,16 @@ describe('CLI Tests', () => {
 		assert.strictEqual(parseInt(result.stdout.toString(), 10), samples.valid[0].length);
 	});
 
+	test('Should compose SMS link with piping', () => {
+		const hexValue = samples.valid[0].hex;
+		const echo = spawnSync('echo', [hexValue]);
+		const result = spawnSync('node', [txmsPath, '--encode', '-s'], {
+			input: echo.stdout
+		});
+		assert.strictEqual(result.status, 0);
+		assert.match(result.stdout.toString(), /^sms:\+12019715152\?body=/);
+	});
+
 	test('Should print help text', () => {
 		const result = spawnSync('node', [txmsPath, '--help']);
 		assert.strictEqual(result.status, 0);
