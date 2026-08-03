@@ -1,6 +1,6 @@
 # TxMS.js
 
-![TxMS logo](https://corecdn.info/badge/svg/128/txms.svg)
+![TxMS logo](https://corecdn.info/mark/144/txms.png)
 > Official TxMS logo
 
 TxMS converts binary data into a sequence of printable characters through a process known as [binary-to-text encoding](https://en.wikipedia.org/wiki/Binary-to-text_encoding). It can also reverse the operation by decoding text containing encoded transactions into its original hexadecimal format. For SMS processing, TxMS uses UTF-16 big-endian (UTF-16BE) encoding to ensure that binary data is handled and interpreted correctly.
