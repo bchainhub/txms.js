@@ -1,24 +1,35 @@
-name: Publish to NPM
+name: Publish to npm
+
 on:
   release:
     types: [published]
+
 permissions:
   id-token: write
-  contents: write
+  contents: read
+
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
         with:
-          node-version: 20.x
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
-      - name: Install & Build 🔧
-        run: npm i && npm run build
-      - name: Publish package on NPM 📦
+          package-manager-cache: false
+
+      - name: Update npm for trusted publishing
+        run: npm install --global npm@11.19.0
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Test package
+        run: npm test
+
+      - name: Publish package
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

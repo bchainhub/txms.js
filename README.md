@@ -25,9 +25,9 @@ Big-endian is an order in which the "big end" (most significant value in the seq
 
 In contrast, little-endian is an order where the "little end" (least significant value in the sequence) is stored first.
 
-| Byte Index  | 0  | 1  |
-|-------------|----|----|
-| Big-Endian  | 12 | 34 |
+| Byte Index    | 0  | 1  |
+|---------------|----|----|
+| Big-Endian    | 12 | 34 |
 | Little-Endian | 34 | 12 |
 
 ## Practical Use
