@@ -3,7 +3,7 @@ import { spawnSync } from 'child_process';
 import assert from 'node:assert/strict';
 import path from 'path';
 import { JSDOM } from 'jsdom';
-import txms, { addCountry, countries, getNumber } from '../dist/index.js';
+import txms from '../dist/index.js';
 import samples from './samples.json' with { type: 'json' };
 import fs, { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -98,22 +98,43 @@ describe('Number Selection Tests', () => {
 	});
 
 	test('Falls back to a country in the same organization', () => {
-		const originalCzechNumbers = countries.xcb.cz;
-		addCountry(1, 'CZ', ['+420123456789']);
+		const originalCzechNumbers = txms.countries.xcb.cz;
+		txms.addCountry(1, 'CZ', ['+420123456789']);
 		try {
 			assert.strictEqual(txms.getNumber('sk'), '+420123456789');
 		} finally {
 			if (originalCzechNumbers) {
-				countries.xcb.cz = originalCzechNumbers;
+				txms.countries.xcb.cz = originalCzechNumbers;
 			} else {
-				delete countries.xcb.cz;
+				delete txms.countries.xcb.cz;
+			}
+		}
+	});
+
+	test('Prefers the largest available country in an organization', () => {
+		const originalGermanNumbers = txms.countries.xcb.de;
+		const originalFrenchNumbers = txms.countries.xcb.fr;
+		txms.addCountry(1, 'FR', ['+33123456789']);
+		txms.addCountry(1, 'DE', ['+49123456789']);
+		try {
+			assert.strictEqual(txms.getNumber('sk'), '+49123456789');
+		} finally {
+			if (originalGermanNumbers) {
+				txms.countries.xcb.de = originalGermanNumbers;
+			} else {
+				delete txms.countries.xcb.de;
+			}
+			if (originalFrenchNumbers) {
+				txms.countries.xcb.fr = originalFrenchNumbers;
+			} else {
+				delete txms.countries.xcb.fr;
 			}
 		}
 	});
 
 	test('Falls back to global or null according to returnNone', () => {
-		assert.strictEqual(getNumber('zz'), '+12019715152');
-		assert.strictEqual(getNumber('zz', true), null);
+		assert.strictEqual(txms.getNumber('zz'), '+12019715152');
+		assert.strictEqual(txms.getNumber('zz', true), null);
 	});
 
 	test('Can select from the testnet pool', () => {
@@ -126,10 +147,10 @@ describe('Number Selection Tests', () => {
 	});
 
 	test('Supports extensible blockchain pool names', () => {
-		addCountry('teth', 'global', ['+441234567890']);
-		addCountry('teth', 'gb', ['+441234567890']);
+		txms.addCountry('teth', 'global', ['+441234567890']);
+		txms.addCountry('teth', 'gb', ['+441234567890']);
 		assert.strictEqual(txms.getNumber('gb', false, 'teth'), '+441234567890');
-		delete countries.teth;
+		delete txms.countries.teth;
 	});
 });
 
@@ -243,20 +264,24 @@ describe('Download Message Tests', () => {
 		global.document = window.document;
 		global.Blob = window.Blob;
 		global.URL = window.URL;
+		global.URL.createObjectURL = () => 'blob:txms-test';
+		window.HTMLAnchorElement.prototype.click = () => {};
 
-		const hex = samples.valid[0].hex;
+		try {
+			const hex = samples.valid[0].hex;
 
-		// Ensure the filename does not conflict with Node.js test
-		const filename = await txms.downloadMessage(hex, 'browser-testdata', outputDir);
+			// Ensure the filename does not conflict with Node.js test
+			const filename = await txms.downloadMessage(hex, 'browser-testdata', outputDir);
 
-		// Assert that the filename is correct (no path since it's a browser simulation)
-		assert.match(filename, /browser-testdata\.txms\.txt$/);
-
-		// Clean up the global variables after the test is done
-		delete global.window;
-		delete global.document;
-		delete global.Blob;
-		delete global.URL;
+			// Assert that the filename is correct (no path since it's a browser simulation)
+			assert.match(filename, /browser-testdata\.txms\.txt$/);
+		} finally {
+			// Clean up the global variables after the test is done
+			delete global.window;
+			delete global.document;
+			delete global.Blob;
+			delete global.URL;
+		}
 	});
 });
 

@@ -1,8 +1,10 @@
-import { countries, getNetworkKey, getNumber } from './numbers.js';
-
-export { addAlias, addCountry, aliases, countries, getNumber } from './numbers.js';
+import { addAlias, addCountry, aliases, countries, getNetworkKey, getNumber } from './numbers.js';
 
 export interface Transport {
+	aliases: Record<string, string>;
+	countries: Record<string, { [key: string]: string[] }>;
+	addAlias(name: string, network: number | string): void;
+	addCountry(network: number | string, countryCode: string, phoneNumbers: string[]): void;
 	encode(hex: string): string;
 	decode(data: string): string;
 	count(hex: string, type?: 'sms' | 'mms' | true): number;
@@ -27,6 +29,17 @@ function slugify(str: string): string {
 }
 
 const txms: Transport = {
+	aliases,
+	countries,
+
+	addAlias(name: string, network: number | string): void {
+		addAlias(name, network);
+	},
+
+	addCountry(network: number | string, countryCode: string, phoneNumbers: string[]): void {
+		addCountry(network, countryCode, phoneNumbers);
+	},
+
 	encode(hex: string): string {
 		let data = '';
 		if (hex.substring(0, 2).toLowerCase() === '0x') {
@@ -210,25 +223,8 @@ const txms: Transport = {
 			filename = `${filename}.txms.txt`;
 		}
 
-		// Node.js environment check
 		/* eslint-disable no-undef */
-		if (typeof process !== 'undefined' && process.versions && process.versions.node) {
-			// Node.js: Use 'fs' to write the file
-			const fs = await import('fs');
-			const path = await import('path');
-
-			// If an optional path is provided, join it with the filename
-			const outputPath = optionalPath ? path.join(optionalPath, filename) : filename;
-
-			// Ensure the directory exists
-			const dir = path.dirname(outputPath);
-			if (!fs.existsSync(dir)) {
-				fs.mkdirSync(dir, { recursive: true });
-			}
-
-			fs.writeFileSync(outputPath, encodedMessage);
-			return outputPath;  // Return the full path of the created file
-		} else if (typeof window !== 'undefined' && typeof Blob !== 'undefined' && typeof document !== 'undefined') {
+		if (typeof window !== 'undefined' && typeof Blob !== 'undefined' && typeof document !== 'undefined') {
 			// Browser environment
 			// If an optional path is provided, prepend it to the filename (simulate a path structure)
 			const fullFilename = optionalPath ? `${optionalPath}/${filename}` : filename;
@@ -241,6 +237,15 @@ const txms: Transport = {
 			link.click();                     // Trigger download
 			document.body.removeChild(link);  // Clean up
 			return fullFilename;  // Return the "path/filename" (simulated for the browser)
+		} else if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+			/*
+			 * Keep the Node-only filesystem implementation behind an opaque dynamic
+			 * import. Browser and edge bundlers can then consume the root `txms.js`
+			 * entry without attempting to resolve Node's `fs` and `path` modules.
+			 */
+			const nodeWriterModule = './node-writer.js';
+			const { writeMessageFile } = await import(nodeWriterModule);
+			return writeMessageFile(filename, encodedMessage, optionalPath);
 		} else {
 			throw new Error('Unsupported environment');
 		}
