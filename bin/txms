@@ -16,8 +16,10 @@ function parseArgs(argv) {
 		output: null, // For download output directory
 		filename: null, // For download filename
 		countryCodes: null, // For getEndpoint
+		network: null, // Blockchain number pool
 		phoneNumbers: null, // For SMS/MMS phone numbers
 		download: false, // Flag to indicate download
+		returnNone: false, // Do not use the global number as a fallback
 		countType: null, // Count type: sms, mms, or null for characters
 		showHelp: false, // Flag to indicate if help is requested
 	};
@@ -43,6 +45,16 @@ function parseArgs(argv) {
 				case '--getendpoint':
 					args.kind = 'getendpoint';
 					args.value = value || 1; // Network type for getEndpoint
+					break;
+				case '--getnumber':
+					args.kind = 'getnumber';
+					args.value = value;
+					break;
+				case '--network':
+					args.network = value;
+					break;
+				case '--return-none':
+					args.returnNone = true;
 					break;
 				case '--sms':
 					args.kind = 'sms';
@@ -91,6 +103,13 @@ function parseArgs(argv) {
 					args.kind = 'getendpoint';
 					args.value = value || 1;
 					break;
+				case '-gn':
+					args.kind = 'getnumber';
+					args.value = value;
+					break;
+				case '-n':
+					args.network = value;
+					break;
 				case '-s':
 					args.kind = 'sms';
 					args.phoneNumbers = value;
@@ -133,10 +152,13 @@ function displayHelp(newline = '\n') {
 
 \x1b[1mOptions:\x1b[0m
 	\x1b[38;5;214m-v, --version\x1b[0m        Get the version of the library.
-	\x1b[38;5;214m-e, --encode\x1b[0m         Encode the HEX transaction.
+	\x1b[38;5;214m-e, --encode\x1b[0m         Encode the hexadecimal transaction.
 	\x1b[38;5;214m-d, --decode\x1b[0m         Decode the UTF-16BE transaction.
 	\x1b[38;5;214m-ct, --count\x1b[0m         Count the number of characters needed for the transaction. You can choose the type of count: 'sms' or 'mms'.
 	\x1b[38;5;214m-g, --getendpoint\x1b[0m    Get the SMS/MMS endpoint for the network and country.
+	\x1b[38;5;214m-gn, --getnumber\x1b[0m     Get the most suitable number for an optional country code.
+	\x1b[38;5;214m-n, --network\x1b[0m        Select the blockchain number pool. The default is xcb.
+	\x1b[38;5;214m--return-none\x1b[0m        Return null instead of the global fallback number.
 	\x1b[38;5;214m-s, --sms\x1b[0m            Create an SMS URI based on the provided parameters.
 	\x1b[38;5;214m-m, --mms\x1b[0m            Create an MMS URI based on the provided parameters.
 	\x1b[38;5;214m-dl, --download\x1b[0m      Download a file with the encoded content as .txms.txt file in your working directory.
@@ -149,6 +171,8 @@ function displayHelp(newline = '\n') {
 	txms --encode=yourHexValue
 	txms -e=yourHexValue --download
 	txms -d=yourUTF16String
+	txms --getnumber=SK --network=xcb
+	txms --getnumber=ZZ --return-none
 	echo yourHexValue | txms --encode
 `;
 	process.stdout.write(helpText + newline);
@@ -165,7 +189,7 @@ if (args.showHelp && process.stdin.isTTY) {
 
 if (process.stdin.isTTY) {
 	// If the script is run with a TTY, process the command-line arguments
-	run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, args.countType, '\n');
+	run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, args.countType, args.network, args.returnNone, '\n');
 } else {
 	// If data is being piped into the script, capture it
 	let content = '';
@@ -176,18 +200,18 @@ if (process.stdin.isTTY) {
 	process.stdin.on('end', () => {
 		content = content.trim();
 		if (!content && !args.showHelp) {
-			run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, args.countType, '');
+				run(args.kind, args.value, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, args.countType, args.network, args.returnNone, '');
 		} else if (args.showHelp) {
 			displayHelp();
 			process.exit(0);
 		} else {
-			run(args.kind, content, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, args.countType, '');
+				run(args.kind, content, args.output, args.countryCodes, args.phoneNumbers, args.download, args.filename, args.countType, args.network, args.returnNone, '');
 		}
 	});
 }
 
-async function run(kind, value, output, countryCodes, phoneNumbers, download, filename, countType, newline) {
-	if (!value && kind !== 'version') {
+async function run(kind, value, output, countryCodes, phoneNumbers, download, filename, countType, network, returnNone, newline) {
+	if (!value && kind !== 'version' && kind !== 'getnumber') {
 		process.stderr.write('Value is required' + newline);
 		process.exit(1);
 	}
@@ -238,12 +262,16 @@ async function run(kind, value, output, countryCodes, phoneNumbers, download, fi
 			}).join(';');
 			process.stdout.write(endpointString + newline);
 			process.exit(0);
+		} else if (kind === 'getnumber') {
+			const number = txms.getNumber(value || undefined, returnNone, network || undefined);
+			process.stdout.write(String(number) + newline);
+			process.exit(0);
 		} else if (kind === 'sms') {
-			const sms = txms.sms(phoneNumbers ? phoneNumbers.split(',') : true, value);
+			const sms = txms.sms(phoneNumbers ? phoneNumbers.split(',') : true, value, network || undefined);
 			process.stdout.write(sms + newline);
 			process.exit(0);
 		} else if (kind === 'mms') {
-			const mms = txms.mms(phoneNumbers ? phoneNumbers.split(',') : true, value);
+			const mms = txms.mms(phoneNumbers ? phoneNumbers.split(',') : true, value, network || undefined);
 			process.stdout.write(mms + newline);
 			process.exit(0);
 		} else {

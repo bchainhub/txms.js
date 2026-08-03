@@ -1,9 +1,9 @@
 # TxMS.js
 
-![TxMS logo](https://corecdn.info/badge/svg/128/txms.svg)
+![TxMS logo](https://corecdn.info/mark/144/txms.png)
 > Official TxMS logo
 
-TxMS is a tool designed for converting binary data into a sequence of printable characters, following a process known as [Binary-to-text encoding](https://en.wikipedia.org/wiki/Binary-to-text_encoding). This tool also enables the reverse operation, where text containing encoded transactions is decoded back into its original hexadecimal format. For SMS processing, TxMS utilizes the UTF-16 Big Endian (UTF-16BE) encoding standard to ensure proper handling and interpretation of the binary data.
+TxMS converts binary data into a sequence of printable characters through a process known as [binary-to-text encoding](https://en.wikipedia.org/wiki/Binary-to-text_encoding). It can also reverse the operation by decoding text containing encoded transactions into its original hexadecimal format. For SMS processing, TxMS uses UTF-16 big-endian (UTF-16BE) encoding to ensure that binary data is handled and interpreted correctly.
 
 ## List of Providers
 
@@ -15,9 +15,9 @@ You can find the open-source server processor at [DataLayerHost/txms-server](htt
 
 ## How Does It Work?
 
-This tool is used for converting HEX encoding to UTF-16 Big Endian (UTF-16BE) and vice versa.
+This tool converts hexadecimal data to UTF-16 big-endian (UTF-16BE) encoding and vice versa.
 
-### What Are UTF-16 and (Big, Little) Endian?
+### What Are UTF-16 and Endianness?
 
 UTF-16 is a character encoding that can encode all 1,112,064 valid Unicode code points.
 
@@ -34,7 +34,7 @@ In contrast, little-endian is an order where the "little end" (least significant
 
 ### Disadvantage 1
 
-An SMS can encode 160 7-bit characters into 140 bytes. However, not all characters represent a single character. Certain characters in GSM 03.38 require an escape character, such as: `|, ^, {, }, €, [, ~, ]` and `\`.
+An SMS can encode 160 7-bit characters into 140 bytes. However, not all characters use a single character position. Certain characters in GSM 03.38 require an escape character, including `|, ^, {, }, €, [, ~, ]`, and `\`.
 
 For Unicode SMS, we are limited to 70 characters (or 67 in multipart SMS).
 
@@ -44,13 +44,13 @@ Most providers do not accept invisible control characters, unused code points, o
 
 ### Advantage 1
 
-Modern providers and phones support UCS-2 (a now-defunct character encoding), which has been replaced with UTF-16 Big Endian (UTF-16BE).
+Modern providers and phones support UCS-2 (a now-defunct character encoding), which has been replaced by UTF-16 big-endian (UTF-16BE).
 
 ### Advantage 2
 
 To prevent the rejection of certain characters, we prefix them with a tilde `~` character ([007E](https://codepoints.net/U+007E)), followed by the 2+2 hex digits converted to Unicode characters.
 
-Both 2 hex digits receive the `01` prefix.
+Each pair of hexadecimal digits receives the `01` prefix.
 
 For example:
 
@@ -63,7 +63,7 @@ For example:
 
 ### Transaction Splitting
 
-To divide transactions in the data feed, use the [Line feed](https://codepoints.net/U+000A) character. In scripts, this is usually referred to as `\n` or `\r`, depending on the OS.
+To divide transactions in the data feed, use the [line feed](https://codepoints.net/U+000A) character. In scripts, this is usually represented by `\n` or `\r`, depending on the operating system.
 
 ### Outcome
 
@@ -71,29 +71,29 @@ Based on these findings, you should be capable of sending CORE transactions (or 
 
 Notes:
 
-- In some instances, you may need to swap the buffer from Little Endian to Big Endian.
+- In some instances, you may need to swap the buffer from little-endian to big-endian.
 - Base62 is a great tool for converting UTF-16 characters into ASCII.
 - We exclude certain characters from the UTF-16 Basic Multilingual Plane:
   - tilde `~` character ([007E](https://codepoints.net/U+007E))
   - replacement character `�` ([FFFD](https://codepoints.net/U+FFFD))
-  - Control, Format, Unassigned, Private use, Surrogate characters
-  - Space characters - Line separator, Paragraph separator, Space separator
+  - control, format, unassigned, private-use, and surrogate characters
+  - space characters, including line, paragraph, and space separators
 
 ### Expectations
 
-Core Blockchain transactions should be packed into 2-3 SMS messages.
+Core Blockchain transactions should fit into 2–3 SMS messages.
 
-#### Sending TxMS vs HEX
+#### Sending TxMS vs. Hexadecimal Data
 
-TxMS, while dependent on UTF-16, is shorter, making it slightly more efficient than plain HEX in the context of SMS.
+Although TxMS depends on UTF-16, it is shorter and slightly more efficient than plain hexadecimal data in SMS messages.
 
-However, there is a significant difference in the length of the messages.
+The resulting messages can differ significantly in length.
 
-In native systems that support UTF-16, you will always achieve the best or most competitive results.
+Native systems that support UTF-16 generally provide the best results.
 
 ## SMS Functionality
 
-The `sms` function has been extended to support multiple numbers. You can now provide an array of numbers, and each will be validated individually. Valid numbers will be concatenated with a comma `,` to form the SMS endpoint.
+The `sms` function supports multiple numbers. You can provide an array of numbers, each of which is validated individually. Valid numbers are joined with a comma (`,`) to form the SMS endpoint.
 
 - If the number is `true`, the default number for the mainnet (1) will be used.
 - If the number is a string, it must be formatted as `+` followed by digits.
@@ -144,24 +144,50 @@ The library is designed to be compatible with both module systems, so you can ch
 - `decode(data: string): string` — Convert UTF-16BE into hex transaction.
 - `count(data: string, type: 'sms' | 'mms'): number` — Count the number of characters/SMS/MMS needed for the transaction.
 - `getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> }` — Get an object of SMS endpoints (phone numbers) per country.
+- `getNumber(iso3166A2?: string, returnNone?: boolean, network?: number | string): string | null` — Get the most suitable number for a country, falling back by shared calling code, organization membership, and then the global number.
 - `sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an SMS URI based on the provided parameters.
 - `mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an MMS URI based on the provided parameters.
-- `downloadMessage(hex: string | string[], optionalFilename?: string, optionalPath?: string): Promise<string>` — Download a file with the encoded content as `.txms.txt` file in your working directory. You can provide one hex transaction or an array of transactions (`.batch` will be prepended to suffix if batch is chosen and optional name not defined).
+- `downloadMessage(hex: string | string[], optionalFilename?: string, optionalPath?: string): Promise<string>` — Download the encoded content as a `.txms.txt` file in your working directory. You can provide one hexadecimal transaction or an array of transactions. When multiple transactions are provided without a custom filename, `.batch` is added before the file extension.
 
-Note: The `downloadMessage` function is asynchronous and returns a Promise. You can use the `await` keyword to wait for the Promise to resolve. The function will download a file with the encoded content as a `(.batch).txms.txt` file in your working directory. You can optionally provide a filename as the second parameter. It is designed to be used in Node.js environments as well as Browser. It is not designed to download high amount of files. if you prefer to do your own download flow, you can use the `encode` function and save the result to a file.
+Note: The `downloadMessage` function is asynchronous and returns a Promise. You can use the `await` keyword to wait for the Promise to resolve. The function downloads the encoded content as a `.txms.txt` or `.batch.txms.txt` file in your working directory. You can optionally provide a filename as the second parameter. It is designed for Node.js and browser environments, but not for downloading a large number of files. If you prefer to implement your own download flow, use the `encode` function and save the result to a file.
 
 ### Parameters
 
-- `hex` = hexadecimal representation of transaction without 0x prefix. (If a prefix is present, it is removed.)
+- `hex` = hexadecimal representation of a transaction without the `0x` prefix. If the prefix is present, it is removed.
 - `data` = UTF-16BE data.
-- `network` (default: 1) = ID of Core Blockchain network or its name (such as: mainnet, devin).
-- `countriesList` (default: all) = ISO 3166 Alpha-2 country/ies code/s.
+- `network` (default: `xcb`) = Blockchain pool name or an alias such as `mainnet`, `devin`, `1`, or `3`.
+- `countriesList` (default: all) = one or more ISO 3166-1 alpha-2 country codes.
 - `number` = boolean, string, number, or array of these, representing the phone number(s) for the SMS.
 - `message` = the SMS message content.
 - `encodeMessage` (default: `true`) = whether to encode the message before using `encodeURIComponent`.
-- `platform` = the platform to use for the SMS URI. Currently supported: `ios`, `global`. Default: `global`. `ios` uses the `&body=`, while `global` uses the `?` for `?body=` parameter.
+- `platform` = the platform to use for the SMS URI. Supported values are `ios` and `global`; the default is `global`. `ios` uses `&body=`, while `global` uses `?body=`.
 - `optionalFilename` = the optional filename for the downloaded file suffixed with `.txms.txt`. Filename is slugified.
 - `optionalPath` = the optional path for the downloaded file. If not provided, the file will be saved in the working directory.
+
+### Selecting the Most Suitable Number
+
+`getNumber` accepts a case-insensitive ISO 3166-1 alpha-2 country code:
+
+```typescript
+import txms, { getNumber } from 'txms.js';
+
+txms.getNumber('US');                  // Direct mainnet match
+txms.getNumber('CA');                  // May use a US number because both use +1
+getNumber('SK');                       // May use another available EU number
+getNumber('ZZ', true);                 // null instead of the global fallback
+getNumber('US', false, 'devin');       // Select from the XAB/testnet pool
+getNumber('US', false, 'xcb');         // XCB alias: mainnet (default)
+getNumber('US', false, 'xab');         // XAB alias: Devin/testnet
+```
+
+When no country is supplied, the global number is returned. For a supplied country, selection follows this order:
+
+1. Direct country match.
+2. A country sharing the same international calling code.
+3. A country in the same supported organization.
+4. The network's global number, or `null` when `returnNone` is `true`.
+
+Number pools are maintained separately in `src/numbers-pool/xcb.ts` for mainnet and `src/numbers-pool/xab.ts` for testnet.
 
 ## CLI
 
@@ -180,14 +206,26 @@ txms {type}={value}
 Types:
 
 - `--version` (`-v`) - Get the version of the library.
-- `--encode` (`-e`) - Encode the HEX transaction.
+- `--encode` (`-e`) - Encode the hexadecimal transaction.
 - `--decode` (`-d`) - Decode the UTF-16BE transaction.
-- `--count` (`-ct`) - Count the number of characters needed for the transaction. You can choose type of count: `sms`, `mms`. (To perform a count, you need to provide `encode` command.)
+- `--count` (`-ct`) - Count the characters or messages required for the transaction. Supported count types are `sms` and `mms`. The `encode` command is required.
 - `--getendpoint` (`-g`) - Get the SMS/MMS endpoint for the network and country.
+- `--getnumber` (`-gn`) - Get the most suitable number for an optional ISO 3166-1 alpha-2 country code.
+- `--network` (`-n`) - Select the blockchain number pool. The default is `xcb`.
+- `--return-none` - Return `null` instead of the global fallback when no suitable number is available.
 - `--sms` - Create an SMS URI based on the provided parameters.
 - `--mms` - Create an MMS URI based on the provided parameters.
-- `--download` (`-dl`) - Boolean value to download a file with the encoded content as `.txms.txt` file in your working directory. (To download a file, you need to provide `encode` command.)
+- `--download` (`-dl`) - Download the encoded content as a `.txms.txt` file in your working directory. The `encode` command is required.
 - `--help` (`-h`) - Show help. (Only for TTY mode.)
+
+Examples:
+
+```bash
+txms --getnumber=CA
+txms --getnumber=US --network=xab
+txms --getnumber=ZZ --return-none
+txms --getnumber
+```
 
 ### Piping
 
@@ -206,11 +244,11 @@ To add a new alias for a network, you can use the `addAlias` function:
 ```typescript
 import { addAlias } from 'txms.js';
 
-// Add a new alias
-addAlias('testnet', 2);
+// Add a short alias for another pool when needed
+addAlias('2', 'teth');
 ```
 
-This will allow you to use testnet as an alias for the network with ID `2`.
+Aliases point to canonical blockchain pool names. Existing compatibility aliases resolve `mainnet` and `1` to `xcb`, while `devin` and `3` resolve to `xab`.
 
 ### Extending Countries
 
@@ -219,11 +257,12 @@ To add new country codes and phone numbers for a specific network, use the addCo
 ```typescript
 import { addCountry } from 'txms.js';
 
-// Add new country codes and phone numbers for the testnet
-addCountry(2, 'uk', ['+441234567890']);
+// Create/update ETH and TETH number pools
+addCountry('eth', 'gb', ['+441234567890']);
+addCountry('teth', 'gb', ['+441234567891']);
 ```
 
-This will associate the UK country code (`'uk'`) and the phone number `+441234567890` with the network ID `2`.
+This associates each country and phone number directly with its blockchain pool. New pool names do not need numeric network IDs.
 
 These utility functions make it easy to customize `txms.js` to support additional networks and countries based on your needs.
 
@@ -231,13 +270,13 @@ These utility functions make it easy to customize `txms.js` to support additiona
 
 Unit tests are included and can be executed with the command `yarn test` or `npm run test`.
 
-GitHub automatically tests the commits into the source code.
+GitHub automatically tests commits pushed to the repository.
 
 Contributions and extensions to our test cases are welcome.
 
 ### Test wallets
 
-We use the Core Blockchain - Devin (testnet) wallets for tests.
+We use Core Blockchain Devin (testnet) wallets for testing.
 
 ## Additional Services
 
@@ -267,7 +306,7 @@ Stay safe. Do not broadcast your private key or any sensitive data you wish to s
 
 You can deploy your own server to process the SMS/MMS messages.
 
-DataLayer is offering [open-source server](https://github.com/DataLayerHost/txms-server) processor for SMS and MMS messages.
+DataLayer offers an [open-source server](https://github.com/DataLayerHost/txms-server) for processing SMS and MMS messages.
 
 ## Pricing considerations
 
@@ -275,9 +314,9 @@ The service is free to use, but you may incur charges from your mobile provider.
 
 Prices may vary depending on the provider and the country.
 
-In Slovakia, for example, the price is 0.06 EUR (worldwide) per SMS. This can be 0.12 - 0.18 EUR for a 2,3-part SMS which corresponds to one transaction.
+In Slovakia, for example, the worldwide price is EUR 0.06 per SMS. A two- or three-part SMS corresponding to one transaction may cost EUR 0.12–0.18.
 
-This is placing TxMS in slight preference (2 or 3 messages), because it is more efficient than HEX (3 messages).
+This gives TxMS a slight advantage because it typically requires two or three messages and is more efficient than hexadecimal encoding.
 
 ### MMS
 
@@ -285,16 +324,16 @@ If you need to send a larger transaction, you can use MMS (Multimedia Messaging 
 
 MMS is better suited for larger files and Blockchain transactions.
 
-One MMS has 1600 characters. The MMS text limit is 5000 characters. MMS object has a limit of 2048 KB.
+One MMS has 1,600 characters. The MMS text limit is 5,000 characters, and an MMS object has a limit of 2,048 KB.
 
 To send MMS, you can use two options:
 
-- You can place the content as text document (text/plain) with extension `.txms.txt` and send it to the same number. Each transaction can be divided with new line. You can place multiple `txms` files into one MMS.
-- Place transaction(s) in the text message body and send it to the same number. Each transaction can be divided with new line.
+- Place the content in a text document (`text/plain`) with the `.txms.txt` extension and send it to the same number. Transactions can be separated by newlines, and multiple `txms` files can be included in one MMS.
+- Place one or more transactions in the message body and send it to the same number. Transactions can be separated by newlines.
 
-MMS has about the same price as SMS (in Slovakia), but the downside is that smartphone should have enabled the MMS service and the data are stored on 3rd party server.
+MMS costs about the same as SMS in Slovakia. However, the smartphone must have MMS enabled, and the data is stored on a third-party server.
 
-Warning: MMS documents are stored on the server and available to download for certain period of time.
+Warning: MMS documents are stored on the server and remain available for download for a limited time.
 
 ## Contributions
 

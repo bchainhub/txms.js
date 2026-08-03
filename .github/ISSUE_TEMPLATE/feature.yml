@@ -6,13 +6,13 @@ body:
   - type: markdown
     attributes:
       value: |
-        Suggest an idea for this project and developers will consider the integration.
+        Suggest an idea for this project for the developers to consider.
 
   - type: textarea
     id: problem
     attributes:
       label: Problem
-      description: Is your feature request related to a problem? Please describe.
+      description: Is your feature request related to a problem? Please describe it.
     validations:
       required: true
 
@@ -34,10 +34,10 @@ body:
     id: implementation
     attributes:
       label: Implementation
-      description: Describe implementation with example of the code.
+      description: Describe the implementation and include a code example.
 
   - type: textarea
     id: additional
     attributes:
       label: Additional context
-      description: Please, place additional content or screenshots.
+      description: Provide any additional context or screenshots.

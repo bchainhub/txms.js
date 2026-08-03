@@ -1,8 +1,13 @@
+import xcb from './numbers-pool/xcb.js';
+import xab from './numbers-pool/xab.js';
+import { callingCodeGroups, organizationGroups } from './numbers-pool/routing.js';
+
 export interface Transport {
 	encode(hex: string): string;
 	decode(data: string): string;
 	count(hex: string, type?: 'sms' | 'mms' | true): number;
 	getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> };
+	getNumber(iso3166A2?: string, returnNone?: boolean, network?: number | string): string | null;
 	sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	generateMessageUri(type: 'sms' | 'mms', number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
@@ -13,32 +18,81 @@ export interface Error extends globalThis.Error {
 	code?: number;
 }
 
-export const aliases: { [key: string]: number } = {
-	'mainnet': 1,
-	'devin': 3,
+export const aliases: Record<string, string> = {
+	'1': 'xcb',
+	'mainnet': 'xcb',
+	'xcb': 'xcb',
+	'3': 'xab',
+	'devin': 'xab',
+	'xab': 'xab',
 };
 
 export const countries: Record<string, { [key: string]: string[] }> = {
-	'1': {
-		'global': ['+12019715152'],
-		'us': ['+12019715152'],
-	},
-	'3': {
-		'global': ['+12014835939'],
-		'us': ['+12014835939'],
-	},
+	'xcb': xcb,
+	'xab': xab,
 };
 
-export function addAlias(name: string, id: number): void {
-	aliases[name] = id;
+export function addAlias(name: string, network: number | string): void {
+	aliases[name.toLowerCase()] = getNetworkKey(network);
 }
 
-export function addCountry(networkId: number | string, countryCode: string, phoneNumbers: string[]): void {
-	const networkKey = networkId.toString();
+export function addCountry(network: number | string, countryCode: string, phoneNumbers: string[]): void {
+	const networkKey = getNetworkKey(network);
 	if (!countries[networkKey]) {
 		countries[networkKey] = {};
 	}
-	countries[networkKey][countryCode] = phoneNumbers;
+	countries[networkKey][countryCode.toLowerCase()] = phoneNumbers;
+}
+
+function getNetworkKey(network?: number | string): string {
+	if (network === undefined) {
+		return 'xcb';
+	}
+	const normalizedNetwork = network.toString().toLowerCase();
+	return aliases[normalizedNetwork] ?? normalizedNetwork;
+}
+
+function getRelatedNumber(pool: { [key: string]: string[] }, countryCode: string, groups: readonly (readonly string[])[]): string | null {
+	const group = groups.find(countryGroup => countryGroup.includes(countryCode));
+	if (!group) {
+		return null;
+	}
+
+	for (const availableCountry of Object.keys(pool)) {
+		if (availableCountry !== 'global' && availableCountry !== countryCode && group.includes(availableCountry) && pool[availableCountry][0]) {
+			return pool[availableCountry][0];
+		}
+	}
+	return null;
+}
+
+export function getNumber(iso3166A2?: string, returnNone: boolean = false, network?: number | string): string | null {
+	const pool = countries[getNetworkKey(network)];
+	if (!pool) {
+		return null;
+	}
+
+	if (!iso3166A2) {
+		return pool.global?.[0] ?? null;
+	}
+
+	const countryCode = iso3166A2.trim().toLowerCase() === 'uk' ? 'gb' : iso3166A2.trim().toLowerCase();
+	const directNumber = pool[countryCode]?.[0];
+	if (directNumber) {
+		return directNumber;
+	}
+
+	const prefixNumber = getRelatedNumber(pool, countryCode, callingCodeGroups);
+	if (prefixNumber) {
+		return prefixNumber;
+	}
+
+	const organizationNumber = getRelatedNumber(pool, countryCode, organizationGroups);
+	if (organizationNumber) {
+		return organizationNumber;
+	}
+
+	return returnNone ? null : pool.global?.[0] ?? null;
 }
 
 function slugify(str: string): string {
@@ -135,27 +189,24 @@ const txms: Transport = {
 			requestedList = [countriesList];
 		}
 
-		let netw: number;
-		if (!network) {
-			netw = 1;
-		} else if (typeof network === 'string') {
-			netw = aliases[network.toLowerCase()] !== undefined ? aliases[network.toLowerCase()] : parseInt(network, 10);
-		} else {
-			netw = network;
-		}
+		const networkKey = getNetworkKey(network);
 
 		if (!requestedList) {
-			return countries[netw];
+			return countries[networkKey];
 		} else {
 			let endpoints: { [key: string]: string[] } = {};
 			for (let n = 0; n < requestedList.length; n++) {
-				const countryCode = requestedList[n];
-				if (countries[netw] && countries[netw][countryCode]) {
-					endpoints[countryCode] = countries[netw][countryCode];
+				const countryCode = requestedList[n].toLowerCase();
+				if (countries[networkKey] && countries[networkKey][countryCode]) {
+					endpoints[countryCode] = countries[networkKey][countryCode];
 				}
 			}
 			return endpoints;
 		}
+	},
+
+	getNumber(iso3166A2?: string, returnNone: boolean = false, network?: number | string): string | null {
+		return getNumber(iso3166A2, returnNone, network);
 	},
 
 	sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage: boolean = true, platform: string = 'global'): string {
@@ -168,17 +219,10 @@ const txms: Transport = {
 
 	generateMessageUri(type: 'sms' | 'mms', number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage: boolean = true, platform: string = 'global'): string {
 		let endpoint: string | undefined;
-		let netw: number;
-		if (!network || network === 1 || network === 'mainnet') {
-			netw = 1;
-		} else if (typeof network === 'string') {
-			netw = aliases[network.toLowerCase()];
-		} else {
-			netw = network;
-		}
+		const networkKey = getNetworkKey(network);
 
 		if (number === true) {
-			endpoint = countries[netw].global[0];
+			endpoint = countries[networkKey].global[0];
 		} else if (typeof number === 'number') {
 			endpoint = `+${number}`;
 		} else if (typeof number === 'string') {

@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Readme
+  - name: README
     url: https://github.com/bchainhub/txms.js#readme
-    about: Read more about the code
+    about: Learn more about the project
   - name: Status page
     url: https://txms.info/
-    about: Get information about running services
+    about: View the status of running services
