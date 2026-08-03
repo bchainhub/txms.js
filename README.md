@@ -124,6 +124,7 @@ yarn add txms.js
 import txms from 'txms.js';
 let encoded = txms.encode(hex);
 let decoded = txms.decode(string);
+let number = txms.getNumber('US');
 ```
 
 #### CommonJS Syntax (Legacy Support)
@@ -144,7 +145,7 @@ The library is designed to be compatible with both module systems, so you can ch
 - `decode(data: string): string` — Convert UTF-16BE into hex transaction.
 - `count(data: string, type: 'sms' | 'mms'): number` — Count the number of characters/SMS/MMS needed for the transaction.
 - `getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> }` — Get an object of SMS endpoints (phone numbers) per country.
-- `getNumber(iso3166A2?: string, returnNone?: boolean, network?: number | string): string | null` — Get the most suitable number for a country, falling back by shared calling code, organization membership, and then the global number.
+- `txms.getNumber(iso3166A2?: string, returnNone?: boolean, network?: number | string): string | null` — Get the most suitable number for a country, falling back by shared calling code, organization membership, and then the global number.
 - `sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an SMS URI based on the provided parameters.
 - `mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an MMS URI based on the provided parameters.
 - `downloadMessage(hex: string | string[], optionalFilename?: string, optionalPath?: string): Promise<string>` — Download the encoded content as a `.txms.txt` file in your working directory. You can provide one hexadecimal transaction or an array of transactions. When multiple transactions are provided without a custom filename, `.batch` is added before the file extension.
@@ -166,18 +167,18 @@ Note: The `downloadMessage` function is asynchronous and returns a Promise. You 
 
 ### Selecting the Most Suitable Number
 
-`getNumber` accepts a case-insensitive ISO 3166-1 alpha-2 country code:
+`txms.getNumber` accepts a case-insensitive ISO 3166-1 alpha-2 country code:
 
 ```typescript
-import txms, { getNumber } from 'txms.js';
+import txms from 'txms.js';
 
 txms.getNumber('US');                  // Direct mainnet match
 txms.getNumber('CA');                  // May use a US number because both use +1
-getNumber('SK');                       // May use another available EU number
-getNumber('ZZ', true);                 // null instead of the global fallback
-getNumber('US', false, 'devin');       // Select from the XAB/testnet pool
-getNumber('US', false, 'xcb');         // XCB alias: mainnet (default)
-getNumber('US', false, 'xab');         // XAB alias: Devin/testnet
+txms.getNumber('SK');                  // May use another available EU number
+txms.getNumber('ZZ', true);            // null instead of the global fallback
+txms.getNumber('US', false, 'devin');  // Select from the XAB/testnet pool
+txms.getNumber('US', false, 'xcb');    // XCB alias: mainnet (default)
+txms.getNumber('US', false, 'xab');    // XAB alias: Devin/testnet
 ```
 
 When no country is supplied, the global number is returned. For a supplied country, selection follows this order:
@@ -235,31 +236,31 @@ echo {value} | txms {type}={value1}
 
 ## Extending Aliases and Countries
 
-The `aliases` and `countries` objects in `txms.js` are designed to be extendable, allowing you to add new networks and countries as needed.
+The default `txms` object exposes extendable `aliases` and `countries` collections, allowing you to add new networks and countries as needed.
 
 ### Extending Aliases
 
-To add a new alias for a network, you can use the `addAlias` function:
+To add a new alias for a network, use `txms.addAlias`:
 
 ```typescript
-import { addAlias } from 'txms.js';
+import txms from 'txms.js';
 
 // Add a short alias for another pool when needed
-addAlias('2', 'teth');
+txms.addAlias('2', 'teth');
 ```
 
 Aliases point to canonical blockchain pool names. Existing compatibility aliases resolve `mainnet` and `1` to `xcb`, while `devin` and `3` resolve to `xab`.
 
 ### Extending Countries
 
-To add new country codes and phone numbers for a specific network, use the addCountry function:
+To add new country codes and phone numbers for a specific network, use `txms.addCountry`:
 
 ```typescript
-import { addCountry } from 'txms.js';
+import txms from 'txms.js';
 
 // Create/update ETH and TETH number pools
-addCountry('eth', 'gb', ['+441234567890']);
-addCountry('teth', 'gb', ['+441234567891']);
+txms.addCountry('eth', 'gb', ['+441234567890']);
+txms.addCountry('teth', 'gb', ['+441234567891']);
 ```
 
 This associates each country and phone number directly with its blockchain pool. New pool names do not need numeric network IDs.
