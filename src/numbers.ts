@@ -42,8 +42,8 @@ function getRelatedNumber(pool: { [key: string]: string[] }, countryCode: string
 		return null;
 	}
 
-	for (const availableCountry of Object.keys(pool)) {
-		if (availableCountry !== 'global' && availableCountry !== countryCode && group.includes(availableCountry) && pool[availableCountry][0]) {
+	for (const availableCountry of group) {
+		if (availableCountry !== countryCode && pool[availableCountry]?.[0]) {
 			return pool[availableCountry][0];
 		}
 	}

@@ -4,37 +4,39 @@
  * provide a same-prefix fallback.
  */
 export const callingCodeGroups: readonly (readonly string[])[] = [
-	['ag', 'ai', 'as', 'bb', 'bm', 'bs', 'ca', 'dm', 'do', 'gd', 'gu', 'jm', 'kn', 'ky', 'lc', 'mp', 'ms', 'pr', 'sx', 'tc', 'tt', 'us', 'vc', 'vg', 'vi'],
-	['kz', 'ru'],
+	['us', 'ca', 'do', 'pr', 'jm', 'tt', 'bs', 'bb', 'lc', 'gd', 'vc', 'ag', 'vi', 'ky', 'bm', 'gu', 'kn', 'dm', 'sx', 'tc', 'vg', 'mp', 'as', 'ai', 'ms'],
+	['ru', 'kz'],
 	['it', 'va'],
 	['gb', 'gg', 'im', 'je'],
 	['no', 'sj'],
-	['ax', 'fi'],
-	['bl', 'gp', 'mf'],
+	['fi', 'ax'],
+	['gp', 'mf', 'bl'],
 	['bq', 'cw'],
 	['au', 'cc', 'cx'],
 	['re', 'yt'],
-	['eh', 'ma'],
+	['ma', 'eh'],
 ];
 
 /*
  * Organization membership is deliberately data-driven so it can be updated
- * without changing the number-selection algorithm. Groups are checked in the
- * order below and countries in pool order win within a matching group.
+ * without changing the number-selection algorithm. Countries within each
+ * organization are ordered by population, largest first. This makes a number
+ * serving a larger population the deterministic fallback when several member
+ * countries have numbers available.
  */
 export const organizationGroups: readonly (readonly string[])[] = [
 	// European Union
-	['at', 'be', 'bg', 'hr', 'cy', 'cz', 'dk', 'ee', 'fi', 'fr', 'de', 'gr', 'hu', 'ie', 'it', 'lv', 'lt', 'lu', 'mt', 'nl', 'pl', 'pt', 'ro', 'sk', 'si', 'es', 'se'],
+	['de', 'fr', 'it', 'es', 'pl', 'ro', 'nl', 'be', 'cz', 'pt', 'se', 'gr', 'hu', 'at', 'bg', 'dk', 'fi', 'sk', 'ie', 'hr', 'lt', 'si', 'lv', 'ee', 'cy', 'lu', 'mt'],
 	// ASEAN
-	['bn', 'kh', 'id', 'la', 'my', 'mm', 'ph', 'sg', 'th', 'tl', 'vn'],
+	['id', 'ph', 'vn', 'th', 'mm', 'my', 'kh', 'la', 'sg', 'tl', 'bn'],
 	// Gulf Cooperation Council
-	['bh', 'kw', 'om', 'qa', 'sa', 'ae'],
+	['sa', 'ae', 'om', 'kw', 'qa', 'bh'],
 	// Mercosur
-	['ar', 'bo', 'br', 'py', 'uy'],
+	['br', 'ar', 'bo', 'py', 'uy'],
 	// South Asian Association for Regional Cooperation
-	['af', 'bd', 'bt', 'in', 'mv', 'np', 'pk', 'lk'],
+	['in', 'pk', 'bd', 'af', 'lk', 'np', 'bt', 'mv'],
 	// Caribbean Community
-	['ag', 'bs', 'bb', 'bz', 'dm', 'gd', 'gy', 'ht', 'jm', 'ms', 'kn', 'lc', 'vc', 'sr', 'tt'],
+	['ht', 'jm', 'tt', 'gy', 'sr', 'bz', 'bs', 'bb', 'lc', 'gd', 'vc', 'ag', 'dm', 'kn', 'ms'],
 	// African Union
-	['dz', 'ao', 'bj', 'bw', 'bf', 'bi', 'cv', 'cm', 'cf', 'td', 'km', 'cg', 'cd', 'ci', 'dj', 'eg', 'gq', 'er', 'sz', 'et', 'ga', 'gm', 'gh', 'gn', 'gw', 'ke', 'ls', 'lr', 'ly', 'mg', 'mw', 'ml', 'mr', 'mu', 'ma', 'mz', 'na', 'ne', 'ng', 'rw', 'eh', 'st', 'sn', 'sc', 'sl', 'so', 'za', 'ss', 'sd', 'tz', 'tg', 'tn', 'ug', 'zm', 'zw'],
+	['ng', 'et', 'eg', 'cd', 'tz', 'za', 'ke', 'ug', 'sd', 'dz', 'ao', 'ma', 'gh', 'mz', 'mg', 'ci', 'cm', 'ne', 'bf', 'ml', 'mw', 'zm', 'td', 'so', 'sn', 'zw', 'gn', 'rw', 'bj', 'bi', 'tn', 'ss', 'tg', 'sl', 'ly', 'cg', 'lr', 'cf', 'mr', 'er', 'na', 'gm', 'bw', 'ga', 'ls', 'gw', 'gq', 'mu', 'sz', 'dj', 'km', 'cv', 'st', 'sc', 'eh'],
 ];

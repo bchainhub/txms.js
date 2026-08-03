@@ -111,6 +111,27 @@ describe('Number Selection Tests', () => {
 		}
 	});
 
+	test('Prefers the largest available country in an organization', () => {
+		const originalGermanNumbers = txms.countries.xcb.de;
+		const originalFrenchNumbers = txms.countries.xcb.fr;
+		txms.addCountry(1, 'FR', ['+33123456789']);
+		txms.addCountry(1, 'DE', ['+49123456789']);
+		try {
+			assert.strictEqual(txms.getNumber('sk'), '+49123456789');
+		} finally {
+			if (originalGermanNumbers) {
+				txms.countries.xcb.de = originalGermanNumbers;
+			} else {
+				delete txms.countries.xcb.de;
+			}
+			if (originalFrenchNumbers) {
+				txms.countries.xcb.fr = originalFrenchNumbers;
+			} else {
+				delete txms.countries.xcb.fr;
+			}
+		}
+	});
+
 	test('Falls back to global or null according to returnNone', () => {
 		assert.strictEqual(txms.getNumber('zz'), '+12019715152');
 		assert.strictEqual(txms.getNumber('zz', true), null);

@@ -185,7 +185,8 @@ When no country is supplied, the global number is returned. For a supplied count
 
 1. Direct country match.
 2. A country sharing the same international calling code.
-3. A country in the same supported organization.
+3. The largest available country in the same supported organization, using
+   the population-priority order maintained by the library.
 4. The network's global number, or `null` when `returnNone` is `true`.
 
 Number pools are maintained separately in `src/numbers-pool/xcb.ts` for mainnet and `src/numbers-pool/xab.ts` for testnet.
