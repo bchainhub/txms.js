@@ -32,7 +32,10 @@
 		"encode",
 		"encoding"
 	],
-	"repository": "https://github.com/bchainhub/txms.js",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/bchainhub/txms.js.git"
+	},
 	"homepage": "https://txms.info",
 	"bugs": {
 		"url": "https://github.com/bchainhub/txms.js/issues"
