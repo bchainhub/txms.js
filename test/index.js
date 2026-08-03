@@ -3,8 +3,8 @@ import { spawnSync } from 'child_process';
 import assert from 'node:assert/strict';
 import path from 'path';
 import { JSDOM } from 'jsdom';
-import txms from '../dist/index.js';
-import samples from './samples.json' assert { type: 'json' };
+import txms, { addCountry, countries, getNumber } from '../dist/index.js';
+import samples from './samples.json' with { type: 'json' };
 import fs, { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 
@@ -81,6 +81,55 @@ describe('Endpoint Tests', () => {
 	test('Endpoints - Default: Mainnet - should return object.', () => {
 		const endpoints = txms.getEndpoint(undefined, ['us', 'ca']);
 		assert.ok(endpoints instanceof Object);
+	});
+});
+
+describe('Number Selection Tests', () => {
+	test('Returns the mainnet global number when no country is provided', () => {
+		assert.strictEqual(txms.getNumber(), '+12019715152');
+	});
+
+	test('Returns a direct country match without case sensitivity', () => {
+		assert.strictEqual(txms.getNumber('US'), '+12019715152');
+	});
+
+	test('Falls back to a country with the same calling-code prefix', () => {
+		assert.strictEqual(txms.getNumber('ca'), '+12019715152');
+	});
+
+	test('Falls back to a country in the same organization', () => {
+		const originalCzechNumbers = countries.xcb.cz;
+		addCountry(1, 'CZ', ['+420123456789']);
+		try {
+			assert.strictEqual(txms.getNumber('sk'), '+420123456789');
+		} finally {
+			if (originalCzechNumbers) {
+				countries.xcb.cz = originalCzechNumbers;
+			} else {
+				delete countries.xcb.cz;
+			}
+		}
+	});
+
+	test('Falls back to global or null according to returnNone', () => {
+		assert.strictEqual(getNumber('zz'), '+12019715152');
+		assert.strictEqual(getNumber('zz', true), null);
+	});
+
+	test('Can select from the testnet pool', () => {
+		assert.strictEqual(txms.getNumber('us', false, 'devin'), '+12014835939');
+	});
+
+	test('Supports XCB and XAB network aliases', () => {
+		assert.strictEqual(txms.getNumber('us', false, 'xcb'), '+12019715152');
+		assert.strictEqual(txms.getNumber('us', false, 'xab'), '+12014835939');
+	});
+
+	test('Supports extensible blockchain pool names', () => {
+		addCountry('teth', 'global', ['+441234567890']);
+		addCountry('teth', 'gb', ['+441234567890']);
+		assert.strictEqual(txms.getNumber('gb', false, 'teth'), '+441234567890');
+		delete countries.teth;
 	});
 });
 
@@ -240,6 +289,30 @@ describe('CLI Tests', () => {
 		const stdout = result.stdout.toString();
 		assert.strictEqual(result.status, 0);
 		assert.match(stdout, /^global:\+[\d,]+/);
+	});
+
+	test('Should return the most suitable number', () => {
+		const result = spawnSync('node', [txmsPath, '--getnumber=CA']);
+		assert.strictEqual(result.status, 0);
+		assert.strictEqual(result.stdout.toString(), '+12019715152');
+	});
+
+	test('Should return the global number when no country is provided', () => {
+		const result = spawnSync('node', [txmsPath, '--getnumber']);
+		assert.strictEqual(result.status, 0);
+		assert.strictEqual(result.stdout.toString(), '+12019715152');
+	});
+
+	test('Should select a blockchain number pool', () => {
+		const result = spawnSync('node', [txmsPath, '-gn=US', '-n=xab']);
+		assert.strictEqual(result.status, 0);
+		assert.strictEqual(result.stdout.toString(), '+12014835939');
+	});
+
+	test('Should return null when the global fallback is disabled', () => {
+		const result = spawnSync('node', [txmsPath, '--getnumber=ZZ', '--return-none']);
+		assert.strictEqual(result.status, 0);
+		assert.strictEqual(result.stdout.toString(), 'null');
 	});
 
 	test('Should handle invalid input', () => {
