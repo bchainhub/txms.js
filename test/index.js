@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import path from 'path';
 import { JSDOM } from 'jsdom';
 import txms from '../dist/index.js';
+import { countries } from 'txms.js/numbers';
 import samples from './samples.json' with { type: 'json' };
 import fs, { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -12,6 +13,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const txmsPath = path.resolve(__dirname, '../bin/txms');
 const outputDir = path.resolve(__dirname, './output');
+
+test('Exports browser-safe number pools', () => {
+	assert.ok(countries.xcb.global.length > 0);
+	assert.ok(countries.xab.global.length > 0);
+});
 
 // Ensure the output directory exists
 if (!fs.existsSync(outputDir)) {
