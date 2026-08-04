@@ -127,6 +127,22 @@ let decoded = txms.decode(string);
 let number = txms.getNumber('US');
 ```
 
+#### Browser-Safe Number Pools
+
+Applications that only need the maintained TxMS number pools can use the
+browser-safe `txms.js/numbers` entry point. It excludes encoding, file download,
+and other runtime code from the bundle.
+
+```typescript
+import { countries } from 'txms.js/numbers';
+
+const mainnetNumbers = countries.xcb;
+const devinNumbers = countries.xab;
+```
+
+The exported `countries` object includes every registered network pool. `xcb`
+contains Core Mainnet numbers and `xab` contains Devin testnet numbers.
+
 #### CommonJS Syntax (Legacy Support)
 
 ```javascript
