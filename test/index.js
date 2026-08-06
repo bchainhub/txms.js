@@ -19,6 +19,13 @@ test('Exports browser-safe number pools', () => {
 	assert.ok(countries.xab.global.length > 0);
 });
 
+test('Exports the XCB mainnet country numbers', () => {
+	assert.deepStrictEqual(countries.xcb.au, ['+61485883792']);
+	assert.deepStrictEqual(countries.xcb.gb, ['+447893984933']);
+	assert.deepStrictEqual(countries.xcb.nl, ['+3197058019443']);
+	assert.deepStrictEqual(countries.xcb.th, ['+66830551102']);
+});
+
 // Ensure the output directory exists
 if (!fs.existsSync(outputDir)) {
 	fs.mkdirSync(outputDir, { recursive: true });
@@ -105,6 +112,8 @@ describe('Number Selection Tests', () => {
 
 	test('Falls back to a country in the same organization', () => {
 		const originalCzechNumbers = txms.countries.xcb.cz;
+		const originalNetherlandsNumbers = txms.countries.xcb.nl;
+		delete txms.countries.xcb.nl;
 		txms.addCountry(1, 'CZ', ['+420123456789']);
 		try {
 			assert.strictEqual(txms.getNumber('sk'), '+420123456789');
@@ -114,6 +123,7 @@ describe('Number Selection Tests', () => {
 			} else {
 				delete txms.countries.xcb.cz;
 			}
+			txms.countries.xcb.nl = originalNetherlandsNumbers;
 		}
 	});
 
