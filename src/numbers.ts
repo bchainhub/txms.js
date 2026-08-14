@@ -1,6 +1,6 @@
 import xcb from './numbers-pool/xcb.js';
 import xab from './numbers-pool/xab.js';
-import { callingCodeGroups, europeanEconomicAreaGroups, europeanUnionGroups, organizationGroups } from './numbers-pool/routing.js';
+import { callingCodeGroups, europeanEconomicAreaGroups, europeanFreeTradeAssociationGroups, europeanUnionGroups, organizationGroups, westernBalkansSixGroups } from './numbers-pool/routing.js';
 
 export const aliases: Record<string, string> = {
 	'1': 'xcb',
@@ -80,6 +80,11 @@ export function getNumber(iso3166A2?: string, returnNone: boolean = false, netwo
 		return prefixNumber;
 	}
 
+	const europeanFreeTradeAssociationNumber = getRelatedNumber(pool, countryCode, europeanFreeTradeAssociationGroups);
+	if (europeanFreeTradeAssociationNumber) {
+		return europeanFreeTradeAssociationNumber;
+	}
+
 	const europeanEconomicAreaNumber = getRelatedNumber(pool, countryCode, europeanEconomicAreaGroups);
 	if (europeanEconomicAreaNumber) {
 		return europeanEconomicAreaNumber;
@@ -90,10 +95,27 @@ export function getNumber(iso3166A2?: string, returnNone: boolean = false, netwo
 			return europeanUnionNumber;
 		}
 	}
+	if (europeanFreeTradeAssociationGroups[0].includes(countryCode)) {
+		const europeanUnionNumber = getAvailableNumber(pool, europeanUnionGroups);
+		if (europeanUnionNumber) {
+			return europeanUnionNumber;
+		}
+	}
 
 	const europeanUnionNumber = getRelatedNumber(pool, countryCode, europeanUnionGroups);
 	if (europeanUnionNumber) {
 		return europeanUnionNumber;
+	}
+
+	const westernBalkansSixNumber = getRelatedNumber(pool, countryCode, westernBalkansSixGroups);
+	if (westernBalkansSixNumber) {
+		return westernBalkansSixNumber;
+	}
+	if (westernBalkansSixGroups[0].includes(countryCode)) {
+		const europeanUnionNumber = getAvailableNumber(pool, europeanUnionGroups);
+		if (europeanUnionNumber) {
+			return europeanUnionNumber;
+		}
 	}
 
 	const organizationNumber = getRelatedNumber(pool, countryCode, organizationGroups);

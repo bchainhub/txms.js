@@ -163,6 +163,30 @@ describe('Number Selection Tests', () => {
 		}
 	});
 
+	test('Falls back from an EFTA country through EEA to EU', () => {
+		const originalNorwegianNumbers = txms.countries.xcb.no;
+		txms.addCountry(1, 'NO', ['+4712345678']);
+		try {
+			assert.strictEqual(txms.getNumber('ch'), '+4712345678');
+		} finally {
+			if (originalNorwegianNumbers) txms.countries.xcb.no = originalNorwegianNumbers;
+			else delete txms.countries.xcb.no;
+		}
+		assert.strictEqual(txms.getNumber('ch'), '+3197058019443');
+	});
+
+	test('Falls back from a WB6 country through WB6 to EU', () => {
+		const originalSerbianNumbers = txms.countries.xcb.rs;
+		txms.addCountry(1, 'RS', ['+381123456789']);
+		try {
+			assert.strictEqual(txms.getNumber('al'), '+381123456789');
+		} finally {
+			if (originalSerbianNumbers) txms.countries.xcb.rs = originalSerbianNumbers;
+			else delete txms.countries.xcb.rs;
+		}
+		assert.strictEqual(txms.getNumber('al'), '+3197058019443');
+	});
+
 	test('Falls back to global or null according to returnNone', () => {
 		assert.strictEqual(txms.getNumber('zz'), '+12019715152');
 		assert.strictEqual(txms.getNumber('zz', true), null);
