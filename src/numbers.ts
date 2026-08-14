@@ -1,6 +1,6 @@
 import xcb from './numbers-pool/xcb.js';
 import xab from './numbers-pool/xab.js';
-import { callingCodeGroups, organizationGroups } from './numbers-pool/routing.js';
+import { callingCodeGroups, europeanEconomicAreaGroups, europeanUnionGroups, organizationGroups } from './numbers-pool/routing.js';
 
 export const aliases: Record<string, string> = {
 	'1': 'xcb',
@@ -50,6 +50,15 @@ function getRelatedNumber(pool: { [key: string]: string[] }, countryCode: string
 	return null;
 }
 
+function getAvailableNumber(pool: { [key: string]: string[] }, groups: readonly (readonly string[])[]): string | null {
+	for (const countryCode of groups[0] ?? []) {
+		if (pool[countryCode]?.[0]) {
+			return pool[countryCode][0];
+		}
+	}
+	return null;
+}
+
 export function getNumber(iso3166A2?: string, returnNone: boolean = false, network?: number | string): string | null {
 	const pool = countries[getNetworkKey(network)];
 	if (!pool) {
@@ -69,6 +78,22 @@ export function getNumber(iso3166A2?: string, returnNone: boolean = false, netwo
 	const prefixNumber = getRelatedNumber(pool, countryCode, callingCodeGroups);
 	if (prefixNumber) {
 		return prefixNumber;
+	}
+
+	const europeanEconomicAreaNumber = getRelatedNumber(pool, countryCode, europeanEconomicAreaGroups);
+	if (europeanEconomicAreaNumber) {
+		return europeanEconomicAreaNumber;
+	}
+	if (europeanEconomicAreaGroups[0].includes(countryCode)) {
+		const europeanUnionNumber = getAvailableNumber(pool, europeanUnionGroups);
+		if (europeanUnionNumber) {
+			return europeanUnionNumber;
+		}
+	}
+
+	const europeanUnionNumber = getRelatedNumber(pool, countryCode, europeanUnionGroups);
+	if (europeanUnionNumber) {
+		return europeanUnionNumber;
 	}
 
 	const organizationNumber = getRelatedNumber(pool, countryCode, organizationGroups);

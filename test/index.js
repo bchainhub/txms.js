@@ -148,6 +148,21 @@ describe('Number Selection Tests', () => {
 		}
 	});
 
+	test('Falls back from an EEA country to an available EU number', () => {
+		assert.strictEqual(txms.getNumber('is'), '+3197058019443');
+	});
+
+	test('Checks EEA numbers before EU numbers', () => {
+		const originalNorwegianNumbers = txms.countries.xcb.no;
+		txms.addCountry(1, 'NO', ['+4712345678']);
+		try {
+			assert.strictEqual(txms.getNumber('is'), '+4712345678');
+		} finally {
+			if (originalNorwegianNumbers) txms.countries.xcb.no = originalNorwegianNumbers;
+			else delete txms.countries.xcb.no;
+		}
+	});
+
 	test('Falls back to global or null according to returnNone', () => {
 		assert.strictEqual(txms.getNumber('zz'), '+12019715152');
 		assert.strictEqual(txms.getNumber('zz', true), null);
