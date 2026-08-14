@@ -24,9 +24,26 @@ export const callingCodeGroups: readonly (readonly string[])[] = [
  * serving a larger population the deterministic fallback when several member
  * countries have numbers available.
  */
-export const organizationGroups: readonly (readonly string[])[] = [
-	// European Union
+export const europeanUnionGroups: readonly (readonly string[])[] = [
 	['de', 'fr', 'it', 'es', 'pl', 'ro', 'nl', 'be', 'cz', 'pt', 'se', 'gr', 'hu', 'at', 'bg', 'dk', 'fi', 'sk', 'ie', 'hr', 'lt', 'si', 'lv', 'ee', 'cy', 'lu', 'mt'],
+];
+
+// European Free Trade Association members, ordered by population.
+export const europeanFreeTradeAssociationGroups: readonly (readonly string[])[] = [
+	['ch', 'no', 'is', 'li'],
+];
+
+// Non-EU European Economic Area members, ordered by population.
+export const europeanEconomicAreaGroups: readonly (readonly string[])[] = [
+	['no', 'is', 'li'],
+];
+
+// Western Balkans Six, ordered by population.
+export const westernBalkansSixGroups: readonly (readonly string[])[] = [
+	['rs', 'al', 'ba', 'mk', 'xk', 'me'],
+];
+
+export const organizationGroups: readonly (readonly string[])[] = [
 	// ASEAN
 	['id', 'ph', 'vn', 'th', 'mm', 'my', 'kh', 'la', 'sg', 'tl', 'bn'],
 	// Gulf Cooperation Council

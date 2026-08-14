@@ -161,7 +161,7 @@ The library is designed to be compatible with both module systems, so you can ch
 - `decode(data: string): string` — Convert UTF-16BE into hex transaction.
 - `count(data: string, type: 'sms' | 'mms'): number` — Count the number of characters/SMS/MMS needed for the transaction.
 - `getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> }` — Get an object of SMS endpoints (phone numbers) per country.
-- `txms.getNumber(iso3166A2?: string, returnNone?: boolean, network?: number | string): string | null` — Get the most suitable number for a country, falling back by shared calling code, organization membership, and then the global number.
+- `txms.getNumber(iso3166A2?: string, returnNone?: boolean, network?: number | string): string | null` — Get the most suitable number for a country, falling back by shared calling code, EFTA/EEA/EU or WB6/EU membership, other supported organizations, and then the global number.
 - `sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an SMS URI based on the provided parameters.
 - `mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an MMS URI based on the provided parameters.
 - `downloadMessage(hex: string | string[], optionalFilename?: string, optionalPath?: string): Promise<string>` — Download the encoded content as a `.txms.txt` file in your working directory. You can provide one hexadecimal transaction or an array of transactions. When multiple transactions are provided without a custom filename, `.batch` is added before the file extension.
@@ -201,9 +201,16 @@ When no country is supplied, the global number is returned. For a supplied count
 
 1. Direct country match.
 2. A country sharing the same international calling code.
-3. The largest available country in the same supported organization, using
-   the population-priority order maintained by the library.
-4. The network's global number, or `null` when `returnNone` is `true`.
+3. The largest available EFTA country when the requested country is in EFTA.
+4. The largest available non-EU EEA country when the requested country is in
+   EFTA or the non-EU EEA.
+5. The largest available EU country, used after EFTA/EEA fallback or directly
+   for EU members.
+6. The largest available WB6 country when the requested country is in WB6,
+   followed by the largest available EU country.
+7. The largest available country in another supported organization, using the
+   population-priority order maintained by the library.
+8. The network's global number, or `null` when `returnNone` is `true`.
 
 Number pools are maintained separately in `src/numbers-pool/xcb.ts` for mainnet and `src/numbers-pool/xab.ts` for testnet.
 
