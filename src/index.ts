@@ -1,5 +1,9 @@
 import { addAlias, addCountry, aliases, countries, getNetworkKey, getNumber } from './numbers.js';
 
+export type SMSParseResult =
+	| { success: true; transactionId: string }
+	| { success: false; reason: string };
+
 export interface Transport {
 	aliases: Record<string, string>;
 	countries: Record<string, { [key: string]: string[] }>;
@@ -10,6 +14,7 @@ export interface Transport {
 	count(hex: string, type?: 'sms' | 'mms' | true): number;
 	getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> };
 	getNumber(iso3166A2?: string, returnNone?: boolean, network?: number | string): string | null;
+	parseSMS(number: string | number, text: string): SMSParseResult | null;
 	sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
 	generateMessageUri(type: 'sms' | 'mms', number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string;
@@ -143,6 +148,27 @@ const txms: Transport = {
 
 	getNumber(iso3166A2?: string, returnNone: boolean = false, network?: number | string): string | null {
 		return getNumber(iso3166A2, returnNone, network);
+	},
+
+	parseSMS(number: string | number, text: string): SMSParseResult | null {
+		const normalizedNumber = String(number).replace(/\D/g, '');
+		if (!normalizedNumber || !Object.values(countries).some(pool =>
+			Object.values(pool).some(phoneNumbers =>
+				phoneNumbers.some(phoneNumber => phoneNumber.replace(/\D/g, '') === normalizedNumber)))) {
+			return null;
+		}
+
+		const successMatch = /^OK\s+TxID:\s*(\S+)\s*$/.exec(text);
+		if (successMatch) {
+			return { success: true, transactionId: successMatch[1] };
+		}
+
+		const failureMatch = /^Failed:\s*(.+?)\s*$/.exec(text);
+		if (failureMatch) {
+			return { success: false, reason: failureMatch[1] };
+		}
+
+		return null;
 	},
 
 	sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage: boolean = true, platform: string = 'global'): string {

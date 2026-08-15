@@ -211,6 +211,27 @@ describe('Number Selection Tests', () => {
 
 // SMS/MMS Tests
 describe('SMS/MMS Tests', () => {
+	test('Parses transaction responses only from configured numbers', () => {
+		assert.deepStrictEqual(
+			txms.parseSMS('+1 (201) 971-5152', 'OK TxID: 0xabc123'),
+			{ success: true, transactionId: '0xabc123' },
+		);
+		assert.deepStrictEqual(
+			txms.parseSMS('+12019715152', 'Failed: Nonce too low.'),
+			{ success: false, reason: 'Nonce too low.' },
+		);
+		assert.strictEqual(txms.parseSMS('+19999999999', 'OK TxID: 0xabc123'), null);
+		assert.strictEqual(txms.parseSMS('+12019715152', 'Unrelated message'), null);
+	});
+
+	test('Parses responses from numbers added to a custom pool', () => {
+		txms.addCountry('custom-sms', 'global', ['+18005550199']);
+		assert.deepStrictEqual(
+			txms.parseSMS('+18005550199', 'Failed: Custom provider error'),
+			{ success: false, reason: 'Custom provider error' },
+		);
+	});
+
 	const hexMessage = samples.valid[0].hex;
 
 	test('SMS - Single number as string', () => {
