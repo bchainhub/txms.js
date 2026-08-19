@@ -95,6 +95,22 @@ Native systems that support UTF-16 generally provide the best results.
 
 The `sms` function supports multiple numbers. You can provide an array of numbers, each of which is validated individually. Valid numbers are joined with a comma (`,`) to form the SMS endpoint.
 
+`parseSMS(number, text)` validates that the sender belongs to a configured TxMS
+number pool and parses compact transaction receipts:
+
+```typescript
+txms.parseSMS('+12019715152', 'OK -1.25 USDX TxID: 0xabc');
+// { success: true, transactionId: '0xabc', amount: '1.25',
+//   asset: 'USDX', direction: 'outgoing' }
+```
+
+The sign is exposed as `direction` (`outgoing` for `-`, `incoming` for `+`). A
+missing sign is treated as incoming. The returned `amount` remains unsigned;
+minimal receipts without an amount and asset remain unsupported.
+`amount` remains a decimal string to avoid precision loss. `asset` is either
+the uppercase ticker resolved through the Well-Known registry or the uppercase
+contract address when the asset is not registered.
+
 - If the number is `true`, the default number for the mainnet (1) will be used.
 - If the number is a string, it must be formatted as `+` followed by digits.
 - If the number is an array, each element will be checked for validity.
@@ -162,6 +178,7 @@ The library is designed to be compatible with both module systems, so you can ch
 - `count(data: string, type: 'sms' | 'mms'): number` — Count the number of characters/SMS/MMS needed for the transaction.
 - `getEndpoint(network?: number | string, countriesList?: string | Array<string>): { [key: string]: Array<string> }` — Get an object of SMS endpoints (phone numbers) per country.
 - `txms.getNumber(iso3166A2?: string, returnNone?: boolean, network?: number | string): string | null` — Get the most suitable number for a country, falling back by shared calling code, EFTA/EEA/EU or WB6/EU membership, other supported organizations, and then the global number.
+- `parseSMS(number: string | number, text: string): SMSParseResult | null` — Parse compact transaction status SMS messages from configured TxMS numbers.
 - `sms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an SMS URI based on the provided parameters.
 - `mms(number?: boolean | string | number | Array<string>, message?: string, network?: number | string, encodeMessage?: boolean, platform?: string): string` — Create an MMS URI based on the provided parameters.
 - `downloadMessage(hex: string | string[], optionalFilename?: string, optionalPath?: string): Promise<string>` — Download the encoded content as a `.txms.txt` file in your working directory. You can provide one hexadecimal transaction or an array of transactions. When multiple transactions are provided without a custom filename, `.batch` is added before the file extension.
