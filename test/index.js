@@ -213,8 +213,21 @@ describe('Number Selection Tests', () => {
 describe('SMS/MMS Tests', () => {
 	test('Parses transaction responses only from configured numbers', () => {
 		assert.deepStrictEqual(
-			txms.parseSMS('+1 (201) 971-5152', 'OK TxID: 0xabc123'),
-			{ success: true, transactionId: '0xabc123' },
+			txms.parseSMS('+12019715152', 'OK -1.25 usdx TxID: 0xdef456'),
+			{ success: true, transactionId: '0xdef456', amount: '1.25', asset: 'USDX', direction: 'outgoing' },
+		);
+		assert.deepStrictEqual(
+			txms.parseSMS('+12019715152', 'OK +1.25 CB1958B39698A44BDAE37F881E68DCE073823A48A631 TxID: 0xdef456'),
+			{ success: true, transactionId: '0xdef456', amount: '1.25', asset: 'CB1958B39698A44BDAE37F881E68DCE073823A48A631', direction: 'incoming' },
+		);
+		assert.deepStrictEqual(
+			txms.parseSMS('+12019715152', 'OK 1.25 USDX TxID: 0xdef456'),
+			{ success: true, transactionId: '0xdef456', amount: '1.25', asset: 'USDX', direction: 'incoming' },
+		);
+		assert.strictEqual(txms.parseSMS('+12019715152', 'OK TxID: 0xdef456'), null);
+		assert.strictEqual(
+			txms.parseSMS('+12019715152', 'OK Amount: 1.25 Asset: USDX TxID: 0xdef456'),
+			null,
 		);
 		assert.deepStrictEqual(
 			txms.parseSMS('+12019715152', 'Failed: Nonce too low.'),

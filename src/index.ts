@@ -1,7 +1,7 @@
 import { addAlias, addCountry, aliases, countries, getNetworkKey, getNumber } from './numbers.js';
 
 export type SMSParseResult =
-	| { success: true; transactionId: string }
+	| { success: true; transactionId: string; amount: string; asset: string; direction: 'incoming' | 'outgoing' }
 	| { success: false; reason: string };
 
 export interface Transport {
@@ -158,9 +158,15 @@ const txms: Transport = {
 			return null;
 		}
 
-		const successMatch = /^OK\s+TxID:\s*(\S+)\s*$/.exec(text);
+		const successMatch = /^OK\s+([+-]?)([0-9]+(?:\.[0-9]+)?)\s+([A-Za-z0-9._-]{1,64})\s+TxID:\s*(0x[0-9A-Fa-f]+)\s*$/.exec(text);
 		if (successMatch) {
-			return { success: true, transactionId: successMatch[1] };
+			return {
+				success: true,
+				transactionId: successMatch[4],
+				amount: successMatch[2],
+				asset: successMatch[3].toUpperCase(),
+				direction: successMatch[1] === '-' ? 'outgoing' : 'incoming',
+			};
 		}
 
 		const failureMatch = /^Failed:\s*(.+?)\s*$/.exec(text);
